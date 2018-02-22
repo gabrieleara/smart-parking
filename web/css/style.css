@@ -1,0 +1,228 @@
+/* 
+----------------------
+FRONTEND PAGE CSS FILE 
+----------------------
+
+INDEX:
+    0 - General
+    0 - Coverboard
+    1 - Navbar
+    2 - Jumbotron
+*/
+
+
+/* 
+// -----------------------
+// 0 - General
+// -----------------------
+*/
+
+.bg-main {
+    background-color: #2E3F5C;
+}
+
+.shadowed {
+    z-index: 2;
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
+}
+
+/* 
+// -----------------------
+// 0 - Coverboard
+// -----------------------
+*/
+
+.cover-container {
+    background-image: url("../img/stars@2x.png");
+    background-size: cover;
+    height: calc(100vh - 54px) ;
+    padding: 0px 0px;
+    background-position: center;
+}
+
+@keyframes rotate_clock {
+    0% { transform:rotate(0deg)}
+    to { transform:rotate(359deg)}
+}
+
+@keyframes rotate_counter {
+    0% { transform:rotate(359deg)}
+    to { transform:rotate(0deg)}
+}
+
+.moon {
+    background-image: url("../img/moon@2x.png");
+    position: absolute;
+    background-size: cover;
+    background-position: center;
+    animation: rotate_clock 300s linear infinite;
+    width: 200px;
+    height: 200px;
+    top: 40vh;
+    left: 20px;
+    overflow: hidden;
+}
+
+.mars {
+    background-image: url("../img/mars@2x.png");
+    background-size: cover;
+    background-position: center;
+    animation: rotate_counter 200s linear infinite;
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: 30vh;
+    right: 20px;
+    overflow: hidden;
+}
+
+/* 
+// -----------------------
+// 1 - Navbar
+// -----------------------
+*/
+
+.navbar-title {
+    color: white;
+    font-family: 'Work Sans', sans-serif;
+    margin: 0 5px;
+}
+
+.navbar-nav a {
+    color: white !important;
+    font-family: 'Work Sans', sans-serif;
+    line-height: 21px;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.75px;
+}
+
+.navbar-nav a:hover {
+    color: #DDD !important;
+}
+
+.navbar-inverse .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 
+// -----------------------
+// 2 - Jumbotron
+// -----------------------
+*/
+
+.heart {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.jumbo {
+    width: 100%;
+    height: 100%;
+    margin-right: 0px;
+    margin-left: 0px;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
+}
+
+.jumbo > .col-sm-4 {
+    padding: 5% 5%;
+    color: white;
+    text-align: center;
+}
+
+.form-control {
+    text-align: center;
+    height: 50px;
+}
+
+@media (max-width: 967px) {
+    .jumbo > .col-sm-4 {
+        padding: 10px 5%;
+        color: white;
+    }
+}
+
+@media (max-width: 767px) {
+    .heart {
+        width: 150%;
+    }
+    .jumbo > .col-sm-4 {
+        padding-top: 15vh;
+    }
+}
+
+.brand-text {
+    letter-spacing: -0.42px;
+    line-height: 30px;
+    font-weight: 300;
+    font-size: 21px;
+    font-family: 'Work Sans', sans-serif;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-search {
+    width: 100%;
+    height: 50px;
+    line-height: 30px;
+}
+
+/* 
+// -----------------------
+// 3 - Map
+// -----------------------
+*/
+
+.map-col {
+    padding: 0;
+    display: flex;
+}
+
+#map {
+    flex-grow: 1;
+}
+
+.search-field {
+    z-index: 2;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+/* 
+// -----------------------
+// 3 - Map
+// -----------------------
+*/
+
+.location-list-item {
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
+}
+
+.location-list-title {
+    background-color: #4f99e2;
+    color: white;
+    padding: 0.5em;
+}
+
+.location-list-title > h5 {
+    font-weight: 300;
+    margin-bottom: 0px;
+}
+
+.location-list-content span {
+    display: block;
+    text-align: center;
+    color: #555;
+}
+
+.location-list-price-text, .location-list-park-text {
+    font-size: 2em;
+}
+
+.location-list-price-label, .location-list-park-label {
+    font-size: 1em;
+}

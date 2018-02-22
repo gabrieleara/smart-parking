@@ -1,9 +1,7 @@
 package it.unipi.iot.parking.lib.om2m;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -24,7 +22,7 @@ public class OM2M {
 	private static final int		OPTION_RESOURCE_TYPE	= 267;
 	
 	private static final int		RESPONSE_CREATED		= 2001;
-	private static final int		RESPONSE_CONTENT		= 2000;
+	// private static final int		RESPONSE_CONTENT		= 2000;
 	
 	private static final int		RESOURCE_TYPE_AE		= 2;
 	private static final int		RESOURCE_TYPE_CNT		= 3;
@@ -240,7 +238,7 @@ public class OM2M {
 	public String getLastValues(String resourceID, int limit) {
 		
 		String uriQuery = "fu=1";
-		//String uriQuery2 = "rty=" + RESOURCE_TYPE_CIN;// + "&ty=" + RESOURCE_TYPE_AE;
+		String uriQuery2 = "rty=" + RESOURCE_TYPE_CIN;// + "&ty=" + RESOURCE_TYPE_AE;
 		
 		if (resourceID == null)
 			resourceID = "/";
@@ -279,7 +277,7 @@ public class OM2M {
 		
 		//if (uriQuery != null && uriQuery.length() > 1)
 			options.addUriQuery(uriQuery);
-			//options.addUriQuery(uriQuery2);
+			options.addUriQuery(uriQuery2);
 		
 		CoapResponse response = client.advanced(request);
 		

@@ -1,0 +1,25 @@
+{
+	"host_address": "172.16.15.129",
+	"port_number": "5684",
+	"cse_id": "parking-pisa-pisano",
+	"credentials": "admin:admin",
+	"api": "perking-api",
+	"app_name":"parks",
+	"cse_name": "ViaAndreaPisanoPisa",
+	"in_id": "parking",
+	"containers_number": 2,
+	"park_data":
+		{
+			"lat": "",
+			"lon":"",
+			"name": "",
+			"address": "",
+			"price": 1.2,
+			"openT": "",
+			"closeT": ""
+		},
+	"spot_data": [
+		{ "lat": "", "lon": "", "free": true, "user": null},
+		{ "lat": "", "lon": "", "free": true, "user": null}
+	]
+}
