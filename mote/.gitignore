@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!spot_resource.c
+!Makefile
+!project-conf.h
+
+# ...even if they are in subdirectories
+!*/
