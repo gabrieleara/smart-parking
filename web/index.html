@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/assets/font-awesome.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400">
 
     <!-- jQuery JS - Popper JS - Bootstrap JS - FontAwesome JS - Main JS -->
     <script type="text/javascript" src="js/assets/jquery-3.2.1.js"></script>
@@ -22,7 +23,6 @@
     <script type="text/javascript" src="js/assets/path.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript" src="js/map.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCrzA3Nparc6cIAMN3dphdT8OOUkTo6fw&callback=initMap"></script>
 
     <!-- Favicon & Preferences -->
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
@@ -46,21 +46,24 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="index.html">
             <img src="img/logo.gif" width="30" height="30" class="d-inline-block align-top" alt="">
             <span class=navbar-title>spark</span>
         </a>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item" id="btn-login">
+                <li class="nav-item" id="btn-about">
                     <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">About</a>
                 </li>
                 <li class="nav-item" id="btn-login">
                     <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Login</a>
                 </li>
-                <li class="nav-item" id="btn-login">
+                <li class="nav-item" id="btn-signup">
                     <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Sign up</a>
+                </li>
+                <li class="nav-item" id="btn-dashboard">
+                    <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Dashboard</a>
                 </li>
             </ul>
         </div>
@@ -68,7 +71,7 @@
     <!-- NAVBAR END -->
 
     <!-- COVER BEGIN -->
-    <div class="container-fluid cover-container bg-main">
+    <div class="container-fluid cover-container bg-main" id="main-container">
         <div class="moon"></div>
         <div class="mars"></div>
     
@@ -82,10 +85,10 @@
                 <p class="brand-text">The brand new way to find easily parking spot and save money!</p>
                 <form class="parking-search">
                     <div class="form-group">
-                        <input type="text" class="form-control" id="place" placeholder="Where are you going?">
+                        <input type="text" class="form-control" id="place-input" placeholder="Where are you going?" onFocus="getLocation()">
                     </div>
                     <div class="form-group">
-                        <a href="#" class="btn btn-primary btn-search" data-toggle="modal" data-target="#signup-modal">Search</a>
+                        <a href="#" class="btn btn-primary btn-search" onclick="showMap()">Search</a>
                     </div>
                 </form>
             </div>
@@ -199,40 +202,33 @@
     </div>
     <!-- MODAL SIGNUP END -->
 
-    <div class="container-fluid cover-container bg-faded">
-        <div class="row jumbo">
-            <div class="col-sm-9 map-col">
+    <div class="container-fluid cover-container bg-faded" id="map-container">
+        <div class="row row-full-width">
+            <div class="col-sm-8 map-col">
                 <div class="form-group search-field">
-                    <input type="text" class="form-control" id="search" placeholder="Search">
+                    <input type="text" class="form-control" id="search" placeholder="Search again" onFocus="getLocation()">
                 </div>
                 <div id="map"></div>
 
             </div>
 
-            <div class="col-sm-3">
-                <div class="location-list-item">
-                    <a class="location-container-link">
-                        <div class="location-list-title">
-                            <h5>Parcheggio Via Odeon</h5>
+            <div class="col-sm-4 list-sidebar">
+                <div class="centerfix">
+                    <div class="container-fluid container-empty">
+                        <div class="row row-empty">
+                            <img class="sad-icon" src="img/sad-icon.svg" alt="No places found">
                         </div>
-                        <div class="location-list-content container-fluid">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <span class="location-list-price-text">1,20$</span>
-                                    <span class="location-list-price-label">per ora</span>
-                                </div>
-                                <div class="col-sm-6">
-                                    <span class="location-list-park-text">20/30</span>
-                                    <span class="location-list-park-label">disponibili/totali</span>
-                                </div>
-                            </div>
+                        <div class="row row-empty">
+                            <span class="empty-text">No places found in the selected area.</span>
                         </div>
-                    </a>
+                    </div>
                 </div>
             </div>
+
         </div>
 
     </div>
 
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCrzA3Nparc6cIAMN3dphdT8OOUkTo6fw&libraries=places&callback=initAutocomplete"></script>
   </body>
 </html>
