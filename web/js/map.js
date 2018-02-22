@@ -3,56 +3,16 @@
 // Permit to manage the map
 // ------------------------------------------
 
-var autocomplete;
+// Map main object
 var map;
 
+// Call as soon as the document is ready
 $(document).ready(function(){
-    
+    initMap();
 });
 
-// -------------------------------------
-// PLACE AUTOCOMPLETE FUNCTIONS
-// -------------------------------------
-
-// Initialize place autocomple field
-function initAutocomplete(id) {
-    if (id == null)
-        id = 'place-input';
-
-    var input = document.getElementById(id);
-    var options = { types: ['geocode'] };
-
-    autocomplete = new google.maps.places.Autocomplete(input, options);
-}
-
-// Get user's geographical location
-function getLocation() {
-    if (navigator.geolocation)
-        navigator.geolocation.getCurrentPosition(placeSetBounds);
-}
-
-// Bias the autocomplete object to the user's geographical location
-function placeSetBounds(position) {
-    var geolocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-    };
-
-    var circle = new google.maps.Circle({
-        center: geolocation,
-        radius: position.coords.accuracy
-    });
-
-    autocomplete.setBounds(circle.getBounds());
-}
-
-// -------------------------------------
-// MAP FUNCTIONS
-// -------------------------------------
-
-// Build and show the map
-function showMap() {
-    var place = autocomplete.getPlace();
+// Initialize the map with custom options
+function initMap() {
     var mapContainer = document.getElementById('map');
     var mapOptions = {
         mapTypeControl: true,
@@ -63,29 +23,57 @@ function showMap() {
         },
     };
 
-    if (place == null || !place.geometry) {
-        $('#place-input').attr("placeholder", "Please insert a valid (world) place");
-        return;
-    }
-
     map = new google.maps.Map(mapContainer, mapOptions);
-    mapSetBounds();
-
-    $('#main-container').fadeOut(400);
-    $('#map-container').fadeIn(400);
-
-    $('#search').val($('#place-input').val());
-    initAutocomplete('search');
-    autocomplete.addListener('place_changed', mapSetBounds);
 }
 
-function mapSetBounds() {
-    var place = autocomplete.getPlace();
+// Search on map using the form in coverboard
+function searchOnMap() {
+    if (!mapUpdatePlace())
+        return;
 
+    showMapHideCover();
+    setAutocomplete('search');
+    addChangeListener(mapUpdatePlace);
+}
+
+// Get current selected place and update the map bounds
+function mapUpdatePlace() {
+    var place = getValidPlace('#place-input');
+
+    if (place == null)
+        return false;
+
+    mapSetBounds(place);
+    //mapSetMarkers
+    return true;
+}
+
+// Set map bound and zoom level based on argument place
+function mapSetBounds(place) {
     if (place.geometry.viewport)
         map.fitBounds(place.geometry.viewport);
     else
         map.setCenter(place.geometry.location);
 
     map.setZoom(17);
+}
+
+// Show the map and hide main coverboard
+function showMapHideCover() {
+    $('#main-container').fadeOut(400);
+    $('#map-container').fadeIn(400);
+
+    $('#search').val($('#place-input').val());
+}
+
+function addParkMarker(place) {
+      var marker = new google.maps.Marker({
+        position: map.getCenter(),
+        icon: "img/marker.svg",
+        map: map
+      });
+}
+
+function addSpotMarker(coord) {
+    // TODO
 }

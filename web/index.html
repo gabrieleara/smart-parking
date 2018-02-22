@@ -23,6 +23,7 @@
     <script type="text/javascript" src="js/assets/path.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript" src="js/map.js"></script>
+    <script type="text/javascript" src="js/autocomplete.js"></script>
 
     <!-- Favicon & Preferences -->
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
@@ -88,7 +89,7 @@
                         <input type="text" class="form-control" id="place-input" placeholder="Where are you going?" onFocus="getLocation()">
                     </div>
                     <div class="form-group">
-                        <a href="#" class="btn btn-primary btn-search" onclick="showMap()">Search</a>
+                        <a href="#" class="btn btn-primary btn-search" onclick="searchOnMap()">Search</a>
                     </div>
                 </form>
             </div>
@@ -229,6 +230,6 @@
 
     </div>
 
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCrzA3Nparc6cIAMN3dphdT8OOUkTo6fw&libraries=places&callback=initAutocomplete"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCrzA3Nparc6cIAMN3dphdT8OOUkTo6fw&libraries=places"></script>
   </body>
 </html>

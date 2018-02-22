@@ -1,0 +1,16 @@
+<svg width="58px" height="44px" viewBox="0 0 58 44" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="shadow">
+        <feGaussianBlur stdDeviation="3" in="SourceGraphic" result="blur"></feGaussianBlur>
+    </filter>
+                </defs>
+                <g transform="translate(5, 5)">
+                    <path fill-opacity="0.4" fill="#000000" filter="url(#shadow)" d="M0,1.99124431 C-3.7378036e-18,0.891510444 0.894938439,0 2.00138927,0 L45.9986107,0 C47.1039475,0 48,0.899897516 48,1.99124431 L48,26.0087557 C48,27.1084896 47.1073772,28 46.0049107,28 L30,28 L24.0002328,33.9997672 L17.8247992,28 L1.99284638,28 C0.892227718,28 8.53406287e-17,27.1001025 8.16313314e-17,26.0087557 L0,1.99124431 L0,1.99124431 Z"></path>
+                    <path fill="#4F99E2" stroke="#4F99E2" stroke-width="2" d="M0,1.99124431 C-3.7378036e-18,0.891510444 0.894938439,0 2.00138927,0 L45.9986107,0 C47.1039475,0 48,0.899897516 48,1.99124431 L48,26.0087557 C48,27.1084896 47.1073772,28 46.0049107,28 L30,28 L24.0002328,33.9997672 L17.8247992,28 L1.99284638,28 C0.892227718,28 8.53406287e-17,27.1001025 8.16313314e-17,26.0087557 L0,1.99124431 L0,1.99124431 Z"></path>
+                    <g font-size="18" font-family="HelveticaNeue, Helvetica Neue, Helvetica, Arial, sans-serif" fill="#FFFFFF" font-weight="400">
+                        <text style="text-anchor: middle;  -webkit-font-smoothing: antialiased;">
+                            <tspan x="24" y="20.5">--</tspan>
+                        </text>
+                    </g>
+                </g>
+            </svg>
