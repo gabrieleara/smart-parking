@@ -1,16 +1,18 @@
-package it.unipi.iot.parking.lib.om2m;
+package it.unipi.iot.parking.om2m.data;
 
 import org.json.JSONObject;
 
+import it.unipi.iot.parking.om2m.OM2M;
+
 // TODO: probably a check to an interface could be interesing
-public class Content extends Resource {
+public class ContentInstance extends Resource {
 	
 	private final int			stateTag;
 	private final String		contentInfo;	// NOTICE: always equal to "message"
 	private final int			contentSize;
 	private final JSONObject	content;
 	
-	protected Content(JSONObject obj) {
+	public ContentInstance(JSONObject obj) {
 		super(obj);
 		
 		stateTag = obj.getInt(OM2M.ATTR_STATE_TAG);
@@ -46,5 +48,14 @@ public class Content extends Resource {
 		
 		return obj;
 	}
+
+	@Override
+	public String[] getCopyOptions() {
+		// TODO: should add time information to the value!
+		
+		return new String[] { getContentValue().toString() } ;
+	}
+	
+	
 	
 }

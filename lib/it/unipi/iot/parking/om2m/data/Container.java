@@ -1,6 +1,8 @@
-package it.unipi.iot.parking.lib.om2m;
+package it.unipi.iot.parking.om2m.data;
 
 import org.json.JSONObject;
+
+import it.unipi.iot.parking.om2m.OM2M;
 
 /**
  * This class represents a OneM2M Container.
@@ -13,7 +15,7 @@ public class Container extends Resource {
 	private final String	latest;
 	private final int		stateTag;
 	
-	protected Container(JSONObject obj) {
+	public Container(JSONObject obj) {
 		super(obj);
 		oldest = obj.getString(OM2M.ATTR_OLDEST);
 		latest = obj.getString(OM2M.ATTR_LATEST);
@@ -42,4 +44,11 @@ public class Container extends Resource {
 		
 		return obj;
 	}
+
+	@Override
+	public String[] getCopyOptions() {
+		return new String[] { getResourceName() };
+	}
+	
+	
 }

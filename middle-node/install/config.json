@@ -1,11 +1,11 @@
 {
-	"host_address": "172.16.15.129",
+	"host_address": "127.0.0.1",
 	"port_number": "5684",
 	"cse_id": "parking-pisa-pisano",
 	"credentials": "admin:admin",
 	"api": "perking-api",
 	"app_name":"parks",
-	"cse_name": "ViaAndreaPisanoPisa",
+	"cse_name": "parking-pisa-via-pisano",
 	"in_id": "parking",
 	"containers_number": 2,
 	"park_data":

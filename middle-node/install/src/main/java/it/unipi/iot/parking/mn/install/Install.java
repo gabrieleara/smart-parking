@@ -2,10 +2,10 @@ package it.unipi.iot.parking.mn.install;
 
 import java.util.ArrayList;
 
-import it.unipi.iot.parking.lib.om2m.ApplicationEntity;
-import it.unipi.iot.parking.lib.om2m.Container;
-import it.unipi.iot.parking.lib.om2m.OM2M;
-import it.unipi.iot.parking.lib.util.MNConfig;
+import it.unipi.iot.parking.om2m.OM2M;
+import it.unipi.iot.parking.om2m.data.ApplicationEntity;
+import it.unipi.iot.parking.om2m.data.Container;
+import it.unipi.iot.parking.util.MNConfig;
 
 public class Install {
 	// private static final String CREDENTIALS = "admin:admin";
@@ -35,7 +35,7 @@ public class Install {
 	}
 	
 	public static void main(String[] args) {
-		OM2M om2m_cse = new OM2M(MNConfig.HOST_ADDRESS, MNConfig.PORT_NUMBER, MNConfig.CREDENTIALS);
+		OM2M om2m_cse = OM2M.init(MNConfig.HOST_ADDRESS, MNConfig.PORT_NUMBER, MNConfig.CREDENTIALS);
 		
 		ApplicationEntity ae = om2m_cse.createApplicationEntity(MNConfig.CSE_ID, MNConfig.API,
 				MNConfig.APP_NAME);
@@ -48,14 +48,14 @@ public class Install {
 		
 		containerName = containerBaseName + num3Char(i + 1);
 		Container container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-		om2m_cse.createContent(container.getResourceID(), MNConfig.PARK_DATA);
+		om2m_cse.createContentInstance(container.getResourceID(), MNConfig.PARK_DATA);
 		
 		System.out.println("CONT: " + container.getResourceID());
 		
 		for (i = 0; i < MNConfig.CONTAINERS_NUMBER; ++i) {
 			containerName = containerBaseName + num3Char(i + 1);
 			container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-			om2m_cse.createContent(container.getResourceID(), MNConfig.SPOT_DATA[i]);
+			om2m_cse.createContentInstance(container.getResourceID(), MNConfig.SPOT_DATA[i]);
 			
 			System.out.println("CONT: " + container.getResourceID());
 		}

@@ -1,6 +1,6 @@
 package it.unipi.iot.parking.web;
 
-import it.unipi.iot.parking.lib.util.MNConfig; 
+import it.unipi.iot.parking.util.MNConfig; 
 import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;

@@ -1,10 +1,9 @@
-package it.unipi.iot.parking.lib.util;
+package it.unipi.iot.parking.util;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.json.JSONArray;
@@ -44,11 +43,6 @@ public class MNConfig {
 	public static final String[]	SPOT_DATA;
 	
 	static {
-		Path currentRelativePath = Paths.get("");
-		String s = currentRelativePath.toAbsolutePath().toString();
-		System.out.println("Current relative path is: " + s);
-		
-		
 		Charset encoding = StandardCharsets.UTF_8;
 		String fname = "./config.json";
 		
