@@ -48,14 +48,14 @@ public class Install {
 		
 		containerName = containerBaseName + num3Char(i + 1);
 		Container container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-		om2m_cse.createContentInstance(container.getResourceID(), MNConfig.PARK_DATA);
+		om2m_cse.createContentInstance(container.getResourceID(), MNConfig.PARK_DATA, "type/manifest");
 		
 		System.out.println("CONT: " + container.getResourceID());
 		
 		for (i = 0; i < MNConfig.CONTAINERS_NUMBER; ++i) {
 			containerName = containerBaseName + num3Char(i + 1);
 			container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-			om2m_cse.createContentInstance(container.getResourceID(), MNConfig.SPOT_DATA[i]);
+			om2m_cse.createContentInstance(container.getResourceID(), MNConfig.SPOT_DATA[i], "type/spot");
 			
 			System.out.println("CONT: " + container.getResourceID());
 		}

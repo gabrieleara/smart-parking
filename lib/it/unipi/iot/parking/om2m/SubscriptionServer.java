@@ -28,7 +28,7 @@ public class SubscriptionServer extends CoapServer implements FullURIResource {
 	
 	// TODO: change to package
 	public SubscriptionServer(int port) {
-		super(port);		
+		super(port);
 		serverURI = "coap://" + IPAddress + ":" + port;
 	}
 	
@@ -36,59 +36,4 @@ public class SubscriptionServer extends CoapServer implements FullURIResource {
 	public String getFullURI() {
 		return serverURI;
 	}
-	
-	
-	/*
-	 public class INSubscriberResource extends SubscriberResource {
-	 
-		
-		
-
-		public INSubscriberResource() {
-			super();
-			
-			SubscriptionServer.this.add(this);
-		}
-		
-		
-
-		@Override
-		public String getURI() {
-			// TODO Auto-generated method stub
-			String uri = super.getURI();
-			
-			return SubscriptionServer.this.getServerURIs()[0] + uri.substring(1);
-		}
-
-
-
-		@Override
-		protected void handlePost(CoapExchange exchange) {
-			// TODO: read new MN data, create a new resource and add it to the server
-		}
-
-		@Override
-		protected String getBaseName() {
-			return "in-monitor-";
-		}
-		
-		
-		
-	}
-	
-	*/
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

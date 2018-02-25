@@ -5,7 +5,6 @@ import org.json.JSONObject;
 import it.unipi.iot.parking.om2m.OM2M;
 import it.unipi.iot.parking.om2m.SubscriberResource;
 import it.unipi.iot.parking.om2m.SubscriptionServer;
-import it.unipi.iot.parking.om2m.data.ApplicationEntity;
 import it.unipi.iot.parking.om2m.data.ContentInstance;
 import it.unipi.iot.parking.om2m.data.Resource;
 

@@ -4,13 +4,12 @@ import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.OM2M;
 
-// TODO: probably a check to an interface could be interesing
 public class ContentInstance extends Resource {
 	
-	private final int			stateTag;
-	private final String		contentInfo;	// NOTICE: always equal to "message"
-	private final int			contentSize;
-	private final JSONObject	content;
+	final int			stateTag;
+	final String		contentInfo;	// NOTICE: always equal to "message"
+	final int			contentSize;
+	final JSONObject	content;
 	
 	public ContentInstance(JSONObject obj) {
 		super(obj);
@@ -48,14 +47,23 @@ public class ContentInstance extends Resource {
 		
 		return obj;
 	}
-
+	
 	@Override
 	public String[] getCopyOptions() {
 		// TODO: should add time information to the value!
 		
-		return new String[] { getContentValue().toString() } ;
+		String[] options = new String[labels.length + 1];
+		
+		options[0] = content.toString();
+		
+		int i = 1;
+		for(String label : labels) {
+			options[i++] = label;
+		}
+		
+		//System.arraycopy(labels, 0, content, 1, labels.length);
+		
+		return options;
 	}
-	
-	
 	
 }

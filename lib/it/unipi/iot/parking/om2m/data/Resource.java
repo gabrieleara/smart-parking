@@ -1,5 +1,10 @@
 package it.unipi.iot.parking.om2m.data;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.OM2M;
@@ -12,12 +17,13 @@ import it.unipi.iot.parking.om2m.OM2M;
  *
  */
 public abstract class Resource {
-	private final int		resourceType;
-	private final String	resourceID;
-	private final String	resourceName;
-	private final String	parentID;
-	private final String	creationTime;
-	private final String	lastModifiedTime;
+	final int		resourceType;
+	final String	resourceID;
+	final String	resourceName;
+	final String	parentID;
+	final String	creationTime;
+	final String	lastModifiedTime;
+	final String[]	labels;
 	
 	// Common attributes, check if necessary here
 	
@@ -35,6 +41,18 @@ public abstract class Resource {
 		parentID = obj.getString(OM2M.ATTR_PARENT_ID);
 		creationTime = obj.getString(OM2M.ATTR_CREATION_TIME);
 		lastModifiedTime = obj.getString(OM2M.ATTR_LAST_MOD_TIME);
+		
+		List<String> labelsList = new ArrayList<>();
+		
+		if (obj.has(OM2M.ATTR_LABELS)) {
+			JSONArray labelsArray = obj.getJSONArray(OM2M.ATTR_LABELS);
+			for (Object s : labelsArray) {
+				
+				labelsList.add((String) s);
+			}
+		}
+		
+		labels = labelsList.toArray(new String[labelsList.size()]);
 	}
 	
 	public int getResourceType() {
@@ -61,6 +79,10 @@ public abstract class Resource {
 		return lastModifiedTime;
 	}
 	
+	public String[] getLabels() {
+		return Arrays.copyOf(labels, labels.length);
+	}
+	
 	public JSONObject toJSONObject() {
 		JSONObject obj = new JSONObject();
 		
@@ -69,11 +91,12 @@ public abstract class Resource {
 			.put(OM2M.ATTR_RESOURCE_NAME, resourceName)
 			.put(OM2M.ATTR_PARENT_ID, parentID)
 			.put(OM2M.ATTR_CREATION_TIME, creationTime)
-			.put(OM2M.ATTR_LAST_MOD_TIME, lastModifiedTime);
+			.put(OM2M.ATTR_LAST_MOD_TIME, lastModifiedTime)
+			.put(OM2M.ATTR_LABELS, new JSONArray(labels));
 		
 		return obj;
 	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -81,7 +104,7 @@ public abstract class Resource {
 		result = prime * result + ((resourceID == null) ? 0 : resourceID.hashCode());
 		return result;
 	}
-
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

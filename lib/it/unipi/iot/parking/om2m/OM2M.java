@@ -70,6 +70,7 @@ public class OM2M {
 	public static final String		ATTR_CSE_ID							= "csi";
 	public static final String		ATTR_NOTIFICATION_URI				= "nu";
 	public static final String		ATTR_NOTIFICATION_CONTENT_TYPE		= "nct";
+	public static final String		ATTR_LABELS							= "lbl";
 	
 	public static final String		ATTR_VERIFICATION_REQUEST			= "vrq";
 	public static final String		ATTR_SUBSCRIPTION_REFERENCE			= "sur";
@@ -78,9 +79,9 @@ public class OM2M {
 	public static final String		ATTR_NOTIFICATION_EVENT				= "nev";
 	public static final String		ATTR_REPRESENTATION					= "rep";
 	
-	private static final int		NCT_WHOLE_RESOURCE					= 1;
+	// private static final int NCT_WHOLE_RESOURCE = 1;
 	private static final int		NCT_MODIFIED_ATTRIBUTES				= 2;
-	private static final int		NCT_REFERENCE_ONLY					= 3;
+	// private static final int NCT_REFERENCE_ONLY = 3;
 	
 	private static final boolean	ATTR_REQUEST_REACHABILITY_CONTENT	= true;
 	private static final String		ATTR_CONTENT_INFO_CONTENT			= "message";
@@ -144,7 +145,10 @@ public class OM2M {
 		case RESOURCE_TYPE_CONTAINER:
 			return createContainer(parentID, options[0]);
 		case RESOURCE_TYPE_CONTENT_INSTANCE:
-			return createContentInstance(parentID, options[0]);
+			if(options.length > 1)
+				return createContentInstance(parentID, options[0], Arrays.copyOfRange(options, 1, options.length));
+			else
+				return createContentInstance(parentID, options[0]);
 		case RESOURCE_TYPE_SUBSCRIPTION:
 			return createSubscription(parentID, options[0]);
 		default:
@@ -167,11 +171,25 @@ public class OM2M {
 		return new Container(object);
 	}
 	
-	public ContentInstance createContentInstance(String parentID, String value) {
+	/*
+	 * public ContentInstance createContentInstance(String parentID, String value) {
+	 * return createContentInstance(parentID, value); }
+	 */
+	
+	public ContentInstance createContentInstance(String parentID, String value, String... labels) {
 		JSONObject object = new JSONObject();
 		
+		JSONArray arr = new JSONArray(labels);
+		
+		System.out.println(arr);
+		/*
+		 * for(String label : labels) {
+		 * 
+		 * }
+		 */
 		object	.put(ATTR_CONTENT, value)
-				.put(ATTR_CONTENT_INFO, ATTR_CONTENT_INFO_CONTENT);
+				.put(ATTR_CONTENT_INFO, ATTR_CONTENT_INFO_CONTENT)
+				.put(ATTR_LABELS, arr);
 		
 		JSONObject body = new JSONObject();
 		body.put("m2m:" + RESOURCE_TYPE_STR_CIN, object);

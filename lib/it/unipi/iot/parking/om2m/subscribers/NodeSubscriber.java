@@ -7,7 +7,6 @@ import it.unipi.iot.parking.om2m.OM2M;
 import it.unipi.iot.parking.om2m.SubscriberResource;
 import it.unipi.iot.parking.om2m.SubscriptionServer;
 import it.unipi.iot.parking.om2m.data.RemoteCSE;
-import it.unipi.iot.parking.om2m.data.Resource;
 
 /**
  * This class tracks changes inside a Node, either a InfrastructureNode or a
@@ -18,17 +17,18 @@ import it.unipi.iot.parking.om2m.data.Resource;
  *
  */
 public class NodeSubscriber extends SubscriberResource {
-
+	
 	public NodeSubscriber(SubscriptionServer parentResource) {
 		super(parentResource);
 	}
-
+	
 	@Override
 	protected void handlePost(CoapExchange exchange) {
 		JSONObject body = new JSONObject(exchange.getRequestText());
 		
 		if (isVerificationRequest(body)) {
-			// First time, do nothing basically
+			// First time, do nothing basically, unless we want to start a new CopyCreator
+			// or something
 			return;
 		}
 		
@@ -46,6 +46,7 @@ public class NodeSubscriber extends SubscriberResource {
 		
 		RemoteCSE rcse = new RemoteCSE(resource);
 		
-		RemoteCSESubscriber sub = new RemoteCSESubscriber(this, rcse.getCSEID(), rcse.getResourceID());
+		RemoteCSESubscriber sub = new RemoteCSESubscriber(this, rcse.getCSEID(),
+				rcse.getResourceID());
 	}
 }

@@ -101,8 +101,8 @@ public abstract class CopySubscriberResource extends SubscriberResource {
 				try {
 					MONITOR.wait();
 				} catch (InterruptedException e) {
-					// TODO: process should terminate? Oh well, eventually it will, don't worry, it
-					// won't take much time
+					// Thread should terminate? Oh well, eventually it will, don't worry, it won't
+					// take much time
 				}
 			}
 		}
