@@ -10,7 +10,7 @@ import it.unipi.iot.parking.om2m.OM2M;
  * @author Gabriele Ara
  *
  */
-public class Container extends Resource {
+public class Container extends OM2MResource {
 	private final String	oldest;
 	private final String	latest;
 	private final int		stateTag;

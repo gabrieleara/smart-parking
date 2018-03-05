@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.OM2M;
 
-public class RemoteCSE extends Resource {
+public class RemoteCSE extends OM2MResource {
 	
 	private final String cseID;
 

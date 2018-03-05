@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.OM2M;
 
-public class ContentInstance extends Resource {
+public class ContentInstance extends OM2MResource {
 	
 	final int			stateTag;
 	final String		contentInfo;	// NOTICE: always equal to "message"

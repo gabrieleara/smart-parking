@@ -10,7 +10,7 @@ import it.unipi.iot.parking.om2m.OM2M;
  * @author Gabriele Ara
  *
  */
-public class ApplicationEntity extends Resource {
+public class ApplicationEntity extends OM2MResource {
 	private final String applicationID;
 	
 	public ApplicationEntity(JSONObject obj) {
