@@ -2,13 +2,11 @@ package it.unipi.iot.parking.om2m;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
@@ -17,6 +15,7 @@ import org.eclipse.californium.core.coap.Option;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.data.ApplicationEntity;
@@ -25,285 +24,650 @@ import it.unipi.iot.parking.om2m.data.ContentInstance;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 import it.unipi.iot.parking.om2m.data.Subscription;
 
+/**
+ * 
+ * @author Gabriele Ara
+ * 
+ *         TODO: the whole documentation is kinda wrong
+ */
 public class OM2M {
+    /*
+     * -----------------------------------------------------------------------------
+     * CONST:
+     * -----------------------------------------------------------------------------
+     */
     
-    private static final Logger LOGGER = Logger.getLogger(OM2M.class.getSimpleName());
+    /**
+     * Standard logger object.
+     */
+    private static final Logger LOGGER = Logger.getLogger(OM2M.class.getName());
     
-    private static final int OPTION_CREDENTIALS   = 256;
-    private static final int OPTION_RESPONSE_CODE = 265;
-    private static final int OPTION_RESOURCE_TYPE = 267;
+    /*
+     * -----------------------------------------------------------------------------
+     * STATIC:
+     * -----------------------------------------------------------------------------
+     */
     
-    private static final int RESPONSE_CREATED = 2001;
-    private static final int RESPONSE_CONTENT = 2000;
+    /*
+     * -----------------------------------------------------------------------------
+     * ATTRIBUTES:
+     * -----------------------------------------------------------------------------
+     */
     
-    public static final int RESOURCE_TYPE_APPLICATION_ENTITY = 2;
-    public static final int RESOURCE_TYPE_CONTAINER          = 3;
-    public static final int RESOURCE_TYPE_CONTENT_INSTANCE   = 4;
-    public static final int RESOURCE_TYPE_CSE_BASE           = 5;
-    public static final int RESOURCE_TYPE_REMOTE_CSE         = 16;
-    public static final int RESOURCE_TYPE_SUBSCRIPTION       = 23;
-    public static final int RESOURCE_TYPE_URIL               = 999;
+    /**
+     * The data that will be used to connect to the OM2M Node.
+     * 
+     * @see OM2MSession
+     */
+    private final OM2MSession sessionData;
     
-    private static final String RESOURCE_TYPE_STR_AE           = "ae";
-    private static final String RESOURCE_TYPE_STR_CNT          = "cnt";
-    private static final String RESOURCE_TYPE_STR_CIN          = "cin";
-    private static final String RESOURCE_TYPE_STR_CB           = "cb";
-    private static final String RESOURCE_TYPE_STR_CSR          = "csr";
-    private static final String RESOURCE_TYPE_STR_SUB          = "sub";
-    private static final String RESOURCE_TYPE_STR_URIL         = "uril";
-    public static final String  ATTR_RESOURCE_TYPE             = "ty";
-    public static final String  ATTR_RESOURCE_ID               = "ri";
-    public static final String  ATTR_RESOURCE_NAME             = "rn";
-    public static final String  ATTR_PARENT_ID                 = "pi";
-    public static final String  ATTR_CREATION_TIME             = "ct";
-    public static final String  ATTR_LAST_MOD_TIME             = "lt";
-    public static final String  ATTR_OLDEST                    = "ol";
-    public static final String  ATTR_LATEST                    = "la";
-    public static final String  ATTR_STATE_TAG                 = "st";
-    public static final String  ATTR_APPLICATION_ID            = "api";
-    public static final String  ATTR_CONTENT                   = "con";
-    public static final String  ATTR_CONTENT_INFO              = "cnf";
-    public static final String  ATTR_CONTENT_SIZE              = "cs";
-    public static final String  ATTR_REQUEST_REACHABILITY      = "rr";
-    public static final String  ATTR_CSE_ID                    = "csi";
-    public static final String  ATTR_NOTIFICATION_URI          = "nu";
-    public static final String  ATTR_NOTIFICATION_CONTENT_TYPE = "nct";
-    public static final String  ATTR_LABELS                    = "lbl";
-    public static final String  ATTR_VERIFICATION_REQUEST      = "vrq";
-    public static final String  ATTR_SUBSCRIPTION_REFERENCE    = "sur";
-    public static final String  ATTR_SUBSCRIPTION_DELETION     = "sud";
-    public static final String  ATTR_NOTIFICATION_OBJECT       = "sgn";
-    public static final String  ATTR_NOTIFICATION_EVENT        = "nev";
-    public static final String  ATTR_REPRESENTATION            = "rep";
+    /*
+     * -----------------------------------------------------------------------------
+     * PUBLIC:
+     * -----------------------------------------------------------------------------
+     */
     
-    // private static final int NCT_WHOLE_RESOURCE = 1;
-    private static final int NCT_MODIFIED_ATTRIBUTES = 2;
-    // private static final int NCT_REFERENCE_ONLY = 3;
-    
-    private static final boolean ATTR_REQUEST_REACHABILITY_CONTENT = true;
-    private static final String  ATTR_CONTENT_INFO_CONTENT         = "message";
-    private static final int     ATTR_NCT_CONTENT                  = NCT_MODIFIED_ATTRIBUTES;
-    
-    private static final String URI_PROTOCOL = "coap";
-    
-    private final String baseURI;
-    private final String credentials;
-    
-    private static OM2M instance = null;
-    
-    public static OM2M init(String host, String portNumber, String credentials) {
-        if (instance != null)
-            throw new IllegalStateException("The init method can be called only once!");
-        
-        instance = new OM2M(host, portNumber, credentials);
-        
-        return instance;
-    }
-    
-    public static String fullAttribute(String attribute) {
-        return "m2m:" + attribute;
+    /**
+     * Creates a new OM2M object, ready to be used to perform queries.
+     * 
+     * @param sessionData
+     *            the data that will be used to connect to the OM2M Node
+     * @see OM2MSession
+     */
+    public OM2M(final OM2MSession sessionData) {
+        this.sessionData = sessionData;
     }
     
     /**
+     * Creates a new {@link ApplicationEntity} in the specified parent, using the
+     * given parameters. Required parameters are (in this order):
+     * <ul>
+     * <li>{@code appID} - the application id associated to the new
+     * ApplicationEntity
+     * <li>{@code name} - the resource name associated to the new ApplicationEntity
+     * </ul>
      * 
-     * @return null if {@link #init(String, String, String)} has not been called.
-     *         The singleton instance otherwise.
+     * Optionally, additional string parameters can be given. Each of them will be
+     * treated as a label associated with the new ApplicationEntity.
+     * 
+     * @param parentID
+     *            the parent resource of the new ApplicationEntity
+     * @param parameters
+     *            the list of parameters needed to create the new ApplicationEntity
+     * @return the newly created ApplicationEntity
+     * @throws TimeoutException
+     * @throws OM2MException
      */
-    public static OM2M getInstance() {
-        return instance;
+    public ApplicationEntity createApplicationEntity(final String parentID, final String appID,
+            final String name, final String[] labels) throws TimeoutException, OM2MException {
+        
+        JSONObject requestObject = constructAEObject(appID, name, labels);
+        
+        return (ApplicationEntity) create(parentID, OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY,
+                requestObject);
     }
     
-    public ApplicationEntity createApplicationEntity(String parentID, String appID, String name) {
-        JSONObject object = new JSONObject();
-        
-        object.put(ATTR_APPLICATION_ID, appID)
-              .put(ATTR_RESOURCE_NAME, name)
-              .put(ATTR_REQUEST_REACHABILITY, ATTR_REQUEST_REACHABILITY_CONTENT);
-        
-        JSONObject body = new JSONObject();
-        body.put("m2m:" + RESOURCE_TYPE_STR_AE, object);
-        
-        CoapResponse response = performPost(parentID, body, RESOURCE_TYPE_APPLICATION_ENTITY);
-        
-        object = (JSONObject) getObject(response, RESOURCE_TYPE_APPLICATION_ENTITY,
-                RESPONSE_CREATED);
-        
-        return new ApplicationEntity(object);
-    }
-    
-    public OM2MResource create(String parentID, int resourceType, String... options) {
-        switch (resourceType) {
-        case RESOURCE_TYPE_APPLICATION_ENTITY:
-            if (options.length < 2)
-                throw new IllegalArgumentException(
-                        "To create an Application Entity two options are required!");
-            return createApplicationEntity(parentID, options[0], options[1]);
-        case RESOURCE_TYPE_CONTAINER:
-            return createContainer(parentID, options[0]);
-        case RESOURCE_TYPE_CONTENT_INSTANCE:
-            if (options.length > 1)
-                return createContentInstance(parentID, options[0],
-                        Arrays.copyOfRange(options, 1, options.length));
-            else
-                return createContentInstance(parentID, options[0]);
-        case RESOURCE_TYPE_SUBSCRIPTION:
-            return createSubscription(parentID, options[0]);
-        default:
-            throw new IllegalArgumentException("Resource Type not supported!");
-        }
-    }
-    
-    public Container createContainer(String parentID, String name) {
-        JSONObject object = new JSONObject();
-        
-        object.put(ATTR_RESOURCE_NAME, name);
-        
-        JSONObject body = new JSONObject();
-        body.put("m2m:" + RESOURCE_TYPE_STR_CNT, object);
-        
-        CoapResponse response = performPost(parentID, body, RESOURCE_TYPE_CONTAINER);
-        
-        object = (JSONObject) getObject(response, RESOURCE_TYPE_CONTAINER, RESPONSE_CREATED);
-        
-        return new Container(object);
-    }
-    
-    /*
-     * public ContentInstance createContentInstance(String parentID, String value) {
-     * return createContentInstance(parentID, value); }
+    /**
+     * Creates a new {@link Container} in the specified parent, using the given
+     * parameters. Required parameters are (in this order):
+     * <ul>
+     * <li>{@code name} - the resource name associated to the new Container
+     * </ul>
+     * 
+     * Optionally, additional string parameters can be given. Each of them will be
+     * treated as a label associated with the new Container.
+     * 
+     * @param parentID
+     *            the parent resource of the new Container
+     * @param parameters
+     *            the list of parameters needed to create the new Container
+     * @return the newly created Container
+     * @throws TimeoutException
+     * @throws OM2MException
      */
-    
-    public ContentInstance createContentInstance(String parentID, String value, String... labels) {
-        JSONObject object = new JSONObject();
+    public Container createContainer(final String parentID, final String name,
+            final String[] labels) throws TimeoutException, OM2MException {
         
-        JSONArray arr = new JSONArray(labels);
+        JSONObject requestObject = constructCNTObject(name, labels);
         
-        System.out.println(arr);
-        /*
-         * for(String label : labels) {
-         * 
-         * }
-         */
-        object.put(ATTR_CONTENT, value)
-              .put(ATTR_CONTENT_INFO, ATTR_CONTENT_INFO_CONTENT)
-              .put(ATTR_LABELS, arr);
-        
-        JSONObject body = new JSONObject();
-        body.put("m2m:" + RESOURCE_TYPE_STR_CIN, object);
-        
-        CoapResponse response = performPost(parentID, body, RESOURCE_TYPE_CONTENT_INSTANCE);
-        
-        object = (JSONObject) getObject(response, RESOURCE_TYPE_CONTENT_INSTANCE, RESPONSE_CREATED);
-        
-        return new ContentInstance(object);
+        return (Container) create(parentID, OM2MConstants.RESOURCE_TYPE_CONTAINER, requestObject);
     }
     
-    public Subscription createSubscription(String parentID, String subscriberURI) {
-        return createSubscription(parentID, subscriberURI, new String[0]);
+    /**
+     * Creates a new {@link ContentInstance} in the specified parent, using the
+     * given parameters. Required parameters are (in this order):
+     * <ul>
+     * <li>{@code value} - the value associated with the new ContentInstance,
+     * represented as the String serialization of a {@link JSONObject}
+     * </ul>
+     * 
+     * Optionally, additional string parameters can be given. Each of them will be
+     * treated as a label associated with the new ContentInstance.
+     * 
+     * @param parentID
+     *            the parent resource of the new ContentInstance
+     * @param parameters
+     *            the list of parameters needed to create the new ContentInstance
+     * @return the newly created ContentInstance
+     * @throws TimeoutException
+     * @throws OM2MException
+     */
+    public ContentInstance createContentInstance(final String parentID, final String value,
+            final String[] labels) throws TimeoutException, OM2MException {
+        
+        JSONObject requestObject = constructCIObject(value, labels);
+        
+        return (ContentInstance) create(parentID, OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE,
+                requestObject);
     }
     
-    public Subscription createSubscription(String parentID, String subscriberURI, String[] labels) {
-        JSONObject object = new JSONObject();
+    public ContentInstance createContentInstance(final String parentID, final String name,
+            final String value, final String[] labels) throws TimeoutException, OM2MException {
         
-        object.put(ATTR_RESOURCE_NAME, "subscriber")
-              .put(ATTR_NOTIFICATION_URI, subscriberURI)
-              .put(ATTR_NOTIFICATION_CONTENT_TYPE, ATTR_NCT_CONTENT)
-              .put(ATTR_LABELS, labels);
+        JSONObject requestObject = constructCIObject(value, name, labels);
         
-        JSONObject body = new JSONObject();
-        body.put("m2m:" + getResourceString(RESOURCE_TYPE_SUBSCRIPTION), object);
-        
-        CoapResponse response = performPost(parentID, body, RESOURCE_TYPE_SUBSCRIPTION);
-        
-        object = (JSONObject) getObject(response, RESOURCE_TYPE_SUBSCRIPTION, RESPONSE_CREATED);
-        
-        return new Subscription(object);
+        return (ContentInstance) create(parentID, OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE,
+                requestObject);
     }
     
-    // TODO: not working
-    public String[] getAllFirstChildrenIDOfType(String parentID, int resourceType) {
-        return getAllChildrenIDOfType(parentID, resourceType, new String[] { "pi=" + parentID });
+    /**
+     * Creates a new {@link Subscription} in the specified parent, using the given
+     * parameters. Required parameters are (in this order):
+     * <ul>
+     * <li>{@code subscriberURI} - the URI at which the new subscriber will listen
+     * for updates
+     * </ul>
+     * 
+     * Optionally, additional string parameters can be given. Each of them will be
+     * treated as a label associated with the new Subscription.
+     * 
+     * <p>
+     * <b>NOTICE:</b> the subscriber shall already be listening for updates on a
+     * different thread, since the OM2M Node will contact it immediately before
+     * creating the new Subscription object.
+     * 
+     * @param parentID
+     *            the parent resource of the new Subscription
+     * @param parameters
+     *            the list of parameters needed to create the new Subscription
+     * @return the newly created Subscription
+     * @throws TimeoutException
+     * @throws OM2MException
+     */
+    public Subscription createSubscription(final String parentID, final String subscriberURI,
+            final String[] labels) throws TimeoutException, OM2MException {
+        
+        JSONObject requestObject = constructSUBObject(subscriberURI, labels);
+        
+        return (Subscription) create(parentID, OM2MConstants.RESOURCE_TYPE_SUBSCRIPTION,
+                requestObject);
     }
     
-    public String[] getAllChildrenIDOfType(String parentID, int resourceType) {
-        return getAllChildrenIDOfType(parentID, resourceType, new String[0]);
+    public OM2MResource create(final String parentID, final int resourceType,
+            final String... parameters) throws TimeoutException, OM2MException {
+        final JSONObject requestObject;
+        
+        requestObject = constructRequestObject(resourceType, parameters);
+        
+        return create(parentID, resourceType, requestObject);
     }
     
-    // TODO: remove public after tests are done
-    public String[] getAllChildrenIDOfType(String parentID, int resourceType, String[] filters) {
-        String[] uriQueries = { "fu=1", "rty=" + resourceType };
+    /**
+     * Creates a new {@link OM2MResource} as a direct child of the given parent
+     * identifier. The actual content of the resource and the number of parameters
+     * varies depending on the value of the {@code resourceType} parameter. See
+     * related methods to check the actual behavior.
+     * 
+     * @param parentID
+     *            the resource where the new copy shall be appended to
+     * @param original
+     *            the resource that shall be copied
+     * @return the newly created copy
+     * @throws TimeoutException
+     * @throws OM2MException
+     * 
+     * @see #createApplicationEntity(String, String...)
+     * @see #createContainer(String, String...)
+     * @see #createContentInstance(String, String...)
+     * @see #createSubscription(String, String...)
+     * 
+     */
+    private OM2MResource create(final String parentID, final int resourceType,
+            final JSONObject requestObject) throws TimeoutException, OM2MException {
+        final JSONObject requestBody, responseObject;
+        final CoapResponse response;
         
-        uriQueries = concatArrays(uriQueries, filters);
+        requestBody = new JSONObject();
+        requestBody.put(OM2MConstants.getFullResourceString(resourceType), requestObject);
         
-        CoapResponse response = performGet(parentID, uriQueries);
+        LOGGER.info("Creating a new " + OM2MConstants.getResourceString(resourceType)
+                + " with following data: `" + requestBody + "`");
         
-        JSONArray array = (JSONArray) getObject(response, RESOURCE_TYPE_URIL, RESPONSE_CONTENT);
+        response = performPost(parentID, requestBody, resourceType);
         
-        List<String> list = new ArrayList<String>();
+        responseObject = (JSONObject) getResponsePayload(response, resourceType,
+                OM2MConstants.RESPONSE_CREATED);
         
-        for (Object o : array) {
-            list.add(o.toString());
+        return OM2MResource.fromJSONObject(responseObject);
+    }
+    
+    /**
+     * Creates a copy of a given {@link OM2MResource} as a direct child of the given
+     * parent identifier. The copy will have the same labels and relevant attributes
+     * as the original resource, but children won't be copied as well.
+     * 
+     * @param parentID
+     *            the resource where the new copy shall be appended to
+     * @param original
+     *            the resource that shall be copied
+     * @return the newly created copy
+     * @throws TimeoutException
+     * @throws OM2MException
+     * 
+     */
+    public OM2MResource createCopy(final String parentID, final OM2MResource original)
+            throws TimeoutException, OM2MException {
+        return createCopy(parentID, original, new String[] {});
+    }
+    
+    public OM2MResource createCopy(final String parentID, final OM2MResource original,
+            final String[] labels) throws TimeoutException, OM2MException {
+        final String[] copyParameters = original.getCopyParameters();
+        final String[] parameters = new String[copyParameters.length + labels.length];
+        
+        System.arraycopy(copyParameters, 0, parameters, 0, copyParameters.length);
+        System.arraycopy(labels, 0, parameters, copyParameters.length, labels.length);
+        
+        return create(parentID, original.getResourceType(), parameters);
+    }
+    
+    /**
+     * Performs a remote request for the resource identified by the given ID.
+     * 
+     * @param resourceID
+     * @return the requested resource, if it exists, null otherwise
+     * @throws TimeoutException
+     * @throws OM2MException
+     */
+    public OM2MResource get(final String resourceID) throws TimeoutException, OM2MException {
+        final CoapResponse response = performGet(concatURIs(resourceID));
+        return OM2MResource.fromJSONObject(
+                (JSONObject) getResponsePayload(response, -1, OM2MConstants.RESPONSE_OK));
+    }
+    
+    public void delete(final String resourceID) throws TimeoutException, OM2MException {
+        final CoapResponse response;
+        
+        response = performDelete(concatURIs(resourceID));
+        
+        // TODO: change to a check response before getting the payload
+        
+        getResponsePayload(response, -1, OM2MConstants.RESPONSE_ACCEPTED);
+    }
+    
+    public String[] discovery(String resourceID) throws TimeoutException, OM2MException {
+        return discovery(resourceID, new String[] {});
+    }
+    
+    /**
+     * Performs a remote request for the resource identified by the given ID.
+     * 
+     * @param resourceID
+     * @return the requested resource, if it exists, null otherwise
+     * @throws TimeoutException
+     * 
+     *             TODO: documentation and correct implementation of this method
+     * @throws OM2MException
+     */
+    public String[] discovery(final String resourceID, final String[] uriQueries)
+            throws TimeoutException, OM2MException {
+        final String[] queries;
+        final CoapResponse response;
+        final JSONArray juril;
+        final String[] uril;
+        
+        // TODO: throw TimeoutException if the get request returns null
+        
+        queries = new String[uriQueries.length + 1];
+        
+        queries[0] = "fu=1";
+        System.arraycopy(uriQueries, 0, queries, 1, uriQueries.length);
+        
+        response = performGet(resourceID, queries);
+        
+        juril = (JSONArray) getResponsePayload(response, OM2MConstants.RESOURCE_TYPE_URIL,
+                OM2MConstants.RESPONSE_OK);
+        
+        uril = new String[juril.length()];
+        
+        int i = 0;
+        for (Object uri : juril) {
+            if (uri instanceof String) {
+                uril[i++] = (String) uri;
+            } else
+                throw new RuntimeException(
+                        "Expected a JSONArray made of Strings, but found something else! "
+                                + "One of the objects was actually an instance of " + uri.getClass()
+                                                                                         .getName()
+                                + ".");
         }
         
-        return list.toArray(new String[list.size()]);
-    }
-    
-    public JSONObject getResourceObjectFromID(String resourceID, int resourceType) {
-        CoapResponse response = performGet(concatURIs(resourceID));
-        return (JSONObject) getObject(response, resourceType, RESPONSE_CONTENT);
-        
-    }
-    
-    public OM2MResource getResourceFromID(String resourceID, int resourceType) {
-        JSONObject obj = getResourceObjectFromID(resourceID, resourceType);
-        
-        return OM2MResource.fromJSONObject(obj);
-        
+        return uril;
     }
     
     // TODO: remove after tests are done!
-    public String testQuery(String resourceID, String[] uriQueries) {
+    public String testQuery(final String resourceID, final String[] uriQueries) {
         return performGet(resourceID, uriQueries).getResponseText();
     }
     
-    // ------------------------------------------------------------------------------------------
-    // -------------------------------- PRIVATE AREA
-    // ------------------------------------------------------------------------------------------
+    /*
+     * -----------------------------------------------------------------------------
+     * PROTECTED:
+     * -----------------------------------------------------------------------------
+     */
     
-    private OM2M(String host, String portNumber, String credentials) {
-        this.baseURI = URI_PROTOCOL + "://" + host + ":" + portNumber + "/~";
-        this.credentials = credentials;
-    }
-    
-    private Object getObject(CoapResponse response, int resourceType, int successCode) {
-        String responseBody = response.getResponseText();
+    /**
+     * Dispatches the request to the appropriate method, depending on the
+     * resourceType given as parameter.
+     * 
+     * @param resourceType
+     *            the type of the resource to be created
+     * @param parameters
+     *            the parameters that shall be used to create it, varies depending
+     *            on the resourceType, see each corresponding related method
+     * @return the object that shall be put in message payload to create a new
+     *         resource
+     * 
+     * @see #constructAEObject(String...)
+     * @see #constructCNTObject(String...)
+     * @see #constructCIObject(String...)
+     * @see #constructSUBObject(String...)
+     * 
+     */
+    protected JSONObject constructRequestObject(final int resourceType,
+            final String... parameters) {
+        final JSONObject requestObject;
         
-        List<Option> list = response.getOptions()
-                                    .asSortedList();
-        
-        Predicate<Option> predicate = opt -> opt.getNumber() == OPTION_RESPONSE_CODE;
-        Option responseOption = list.stream()
-                                    .filter(predicate)
-                                    .findFirst()
-                                    .orElse(null);
-        
-        if (responseOption == null) {
-            String message = "Option RESPONSE couldn't be found! Response body was: "
-                    + responseBody;
-            throw new RuntimeException(message);
+        switch (resourceType) {
+        case OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY:
+            requestObject = constructAEObject(parameters);
+            break;
+        case OM2MConstants.RESOURCE_TYPE_CONTAINER:
+            requestObject = constructCNTObject(parameters);
+            break;
+        case OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE:
+            requestObject = constructCIObject(parameters);
+            break;
+        case OM2MConstants.RESOURCE_TYPE_SUBSCRIPTION:
+            requestObject = constructSUBObject(parameters);
+            break;
+        default:
+            throw new UnsupportedOperationException(
+                    "The given resource type is not supported yet!");
         }
         
-        if (responseOption.getIntegerValue() != successCode) {
-            String message = "Option RESPONSE status code was " + responseOption.getIntegerValue()
-                    + ".\nResponse body was: `" + responseBody + "`";
-            throw new RuntimeException(message);
-        }
-        
-        LOGGER.log(Level.INFO, "Request has been accepted!");
-        
-        return new JSONObject(responseBody).get("m2m:" + getResourceString(resourceType));
+        return requestObject;
     }
     
+    protected JSONObject constructAEObject(final String... parameters) {
+        if (parameters.length < 2) {
+            throw new IllegalArgumentException(
+                    "At least two parameters are required, the App ID and the Resource Name.");
+        }
+        
+        final String[] labels = Arrays.copyOfRange(parameters, 2, parameters.length);
+        
+        return constructAEObject(parameters[0], parameters[1], labels);
+    }
+    
+    protected JSONObject constructAEObject(final String appID, final String name,
+            final String[] labels) {
+        final JSONObject requestObject;
+        
+        requestObject = new JSONObject();
+        requestObject.put(OM2MConstants.ATTR_APPLICATION_ID, appID)
+                     .put(OM2MConstants.ATTR_RESOURCE_NAME, name)
+                     .put(OM2MConstants.ATTR_REQUEST_REACHABILITY,
+                             OM2MConstants.ATTR_REQUEST_REACHABILITY_VALUE)
+                     .put(OM2MConstants.ATTR_LABELS, labels);
+        
+        return requestObject;
+    }
+    
+    protected JSONObject constructCNTObject(final String... parameters) {
+        if (parameters.length < 1) {
+            throw new IllegalArgumentException(
+                    "At least one parameter is required, the Resource Name.");
+        }
+        
+        final String[] labels = Arrays.copyOfRange(parameters, 1, parameters.length);
+        
+        return constructCNTObject(parameters[0], labels);
+    }
+    
+    protected JSONObject constructCNTObject(final String name, final String[] labels) {
+        final JSONObject requestObject;
+        
+        requestObject = new JSONObject();
+        requestObject.put(OM2MConstants.ATTR_RESOURCE_NAME, name)
+                     .put(OM2MConstants.ATTR_LABELS, labels);
+        
+        return requestObject;
+    }
+    
+    protected JSONObject constructCIObject(final String... parameters) {
+        if (parameters.length < 1) {
+            throw new IllegalArgumentException("At least one parameter is required, the value.");
+        }
+        
+        final String[] labels = Arrays.copyOfRange(parameters, 1, parameters.length);
+        
+        return constructCIObject(parameters[0], labels);
+    }
+    
+    protected JSONObject constructCIObject(final String value, final String[] labels) {
+        final JSONObject requestObject;
+        
+        requestObject = new JSONObject();
+        requestObject.put(OM2MConstants.ATTR_CONTENT, value)
+                     .put(OM2MConstants.ATTR_CONTENT_INFO, OM2MConstants.ATTR_CONTENT_INFO_VALUE)
+                     .put(OM2MConstants.ATTR_LABELS, labels);
+        
+        return requestObject;
+    }
+    
+    protected JSONObject constructCIObject(final String value, final String name,
+            final String[] labels) {
+        final JSONObject requestObject;
+        
+        requestObject = new JSONObject();
+        requestObject.put(OM2MConstants.ATTR_CONTENT, value)
+                     .put(OM2MConstants.ATTR_RESOURCE_NAME, name)
+                     .put(OM2MConstants.ATTR_CONTENT_INFO, OM2MConstants.ATTR_CONTENT_INFO_VALUE)
+                     .put(OM2MConstants.ATTR_LABELS, labels);
+        
+        return requestObject;
+    }
+    
+    protected JSONObject constructSUBObject(final String... parameters) {
+        if (parameters.length < 1) {
+            throw new IllegalArgumentException(
+                    "At least one parameter is required, the subscriber URI.");
+        }
+        
+        final String[] labels = Arrays.copyOfRange(parameters, 1, parameters.length);
+        
+        return constructSUBObject(parameters[0], labels);
+    }
+    
+    protected JSONObject constructSUBObject(final String subscriberURI, final String[] labels) {
+        final JSONObject requestObject;
+        
+        requestObject = new JSONObject();
+        requestObject.put(OM2MConstants.ATTR_RESOURCE_NAME,
+                OM2MConstants.ATTR_RESOURCE_NAME_SUBSCRIBER)
+                     .put(OM2MConstants.ATTR_NOTIFICATION_URI, subscriberURI)
+                     .put(OM2MConstants.ATTR_NOTIFICATION_CONTENT_TYPE,
+                             OM2MConstants.ATTR_NCT_VALUE)
+                     .put(OM2MConstants.ATTR_LABELS, labels);
+        
+        return requestObject;
+    }
+    
+    /*
+     * -----------------------------------------------------------------------------
+     * PRIVATE:
+     * -----------------------------------------------------------------------------
+     */
+    
+    /**
+     * Performs a POST operation, used to create a new resource under the parentID
+     * resource. The new resource content depends on the body argument, while its
+     * type is given as resourceType argument.
+     * 
+     * @param parentID
+     *            the parent of the new resource, it may be a resource ID or a path
+     *            formed by resource names IF the resource to be created will reside
+     *            on the OM2M node that will receive this request
+     * @param body
+     *            the content of the new resource to be created
+     * @param resourceType
+     *            the type of the new resource to be created
+     * @return the response of the OM2M that receives this request
+     * 
+     * @throws RuntimeException
+     *             if the given resourceID cannot be used to create a valid URI
+     */
+    private CoapResponse performPost(String parentID, JSONObject body, int resourceType) {
+        Request request = Request.newPost();
+        
+        request.setURI(getURIFromID(parentID));
+        
+        LOGGER.info("Sending POST request to URI `" + request.getURI() + "`");
+        
+        OptionSet options = request.getOptions();
+        
+        options.addOption(new Option(OM2MConstants.OPTION_RESOURCE_TYPE, resourceType))
+               .addOption(
+                       new Option(OM2MConstants.OPTION_CREDENTIALS, sessionData.getCredentials()))
+               .setContentFormat(MediaTypeRegistry.APPLICATION_JSON)
+               .setAccept(MediaTypeRegistry.APPLICATION_JSON);
+        
+        request.setPayload(body.toString());
+        
+        LOGGER.info("Sending following payload: `" + body + "`");
+        
+        return performRequest(request);
+    }
+    
+    /**
+     * The same as calling {@link #performGet(String, String[])} with an empty array
+     * as second parameter.
+     * 
+     * @see #performGet(String, String[])
+     */
+    private CoapResponse performGet(String resourceID) {
+        return performGet(resourceID, new String[0]);
+    }
+    
+    /**
+     * Performs a GET request, to retrieve a resource from the given OM2M node. The
+     * request can be a simple one if no uriQueries are given as argument or a
+     * discovery.
+     * 
+     * @param resourceID
+     *            the parent element on which the get shall be applied
+     * @param uriQueries
+     *            queries used to perform a discovery request
+     * @return the CoAP response if any, otherwise null if the request timed out
+     */
+    private CoapResponse performGet(String resourceID, String[] uriQueries) {
+        Request request = Request.newGet();
+        
+        request.setURI(getURIFromID(resourceID));
+        
+        LOGGER.info("Sending GET request to URI `" + request.getURI() + "`");
+        
+        OptionSet options = request.getOptions();
+        
+        options.addOption(
+                new Option(OM2MConstants.OPTION_CREDENTIALS, sessionData.getCredentials()))
+               .setContentFormat(MediaTypeRegistry.APPLICATION_JSON)
+               .setAccept(MediaTypeRegistry.APPLICATION_JSON);
+        
+        for (String s : uriQueries)
+            options.addUriQuery(s);
+        
+        return performRequest(request);
+    }
+    
+    private CoapResponse performDelete(String resourceID) {
+        Request request = Request.newDelete();
+        
+        request.setURI(getURIFromID(resourceID));
+        
+        LOGGER.info("Sending DELETE request to URI `" + request.getURI() + "`");
+        
+        OptionSet options = request.getOptions();
+        
+        options.addOption(
+                new Option(OM2MConstants.OPTION_CREDENTIALS, sessionData.getCredentials()))
+               .setContentFormat(MediaTypeRegistry.APPLICATION_JSON)
+               .setAccept(MediaTypeRegistry.APPLICATION_JSON);
+        
+        return performRequest(request);
+    }
+    
+    /**
+     * Performs a CoAP Request.
+     * 
+     * @param request
+     *            the request
+     * @return the response, if any, null if the request timed out
+     */
+    private CoapResponse performRequest(Request request) {
+        CoapClient client = new CoapClient();
+        
+        client.setTimeout(OM2MSession.TIMEOUT);
+        
+        return client.advanced(request);
+    }
+    
+    /**
+     * Returns the absolute URI of the resource identified by the resourceID.
+     * 
+     * @param resourceID
+     *            can be either a resource ID or a path formed by resource names IF
+     *            the resource to be created will reside on the OM2M node that will
+     *            receive this request.
+     * @return the absolute URI of the resource
+     * 
+     * @throws RuntimeException
+     *             if the given resourceID cannot be used to create a valid URI
+     */
+    private URI getURIFromID(String resourceID) {
+        // Concatenates the baseURI used for each request with resourceID
+        String containerLocation = concatURIs(sessionData.getBaseURI(), resourceID);
+        URI uri = null;
+        
+        // Creates the URI object
+        try {
+            uri = new URI(containerLocation);
+        } catch (URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
+        
+        return uri;
+    }
+    
+    /**
+     * Concatenates multiple URIs given as arguments, the URIs may start or with a
+     * '/' character, but not finish with one. The final URI will not have a '/' as
+     * final character.
+     * 
+     * @param strings
+     * @return
+     */
     private String concatURIs(String... strings) {
         StringBuffer buffer = new StringBuffer();
         int oldSize;
@@ -328,209 +692,82 @@ public class OM2M {
         return buffer.toString();
     }
     
-    private URI getURIFromID(String resourceID) {
-        String containerLocation = concatURIs(baseURI, resourceID);
-        URI uri = null;
+    /**
+     * Checks whether the request that has been performed as terminated
+     * successfully.
+     * 
+     * @param response
+     * @param resourceType
+     * @param successCode
+     * @return
+     * @throws TimeoutException
+     * @throws OM2MException
+     */
+    private Object getResponsePayload(final CoapResponse response, int resourceType,
+            final int successCode) throws TimeoutException, OM2MException {
+        if (response == null) {
+            LOGGER.severe("The response timed out! The node may be unreachable. ");
+            LOGGER.severe("Throwing a TimeoutException...");
+            throw new TimeoutException("The response timed out! The node may be unreachable.");
+        }
+        
+        String responseBody = response.getResponseText();
+        
+        LOGGER.info("Response body is `" + responseBody + "`");
+        
+        List<Option> list = response.getOptions()
+                                    .asSortedList();
+        
+        Predicate<Option> predicate = opt -> opt.getNumber() == OM2MConstants.OPTION_RESPONSE_CODE;
+        Option responseOption = list.stream()
+                                    .filter(predicate)
+                                    .findFirst()
+                                    .orElse(null);
+        
+        if (responseOption == null) {
+            LOGGER.severe("The given response didn't have any RESPONSE option.");
+            LOGGER.severe("Throwing a OM2MException...");
+            
+            String message = "Response body was: " + responseBody;
+            
+            throw new OM2MException(message, ErrorCode.fromWebCode(0));
+        }
+        
+        if (responseOption.getIntegerValue() != successCode) {
+            String message = "Option RESPONSE status code was " + responseOption.getIntegerValue()
+                    + ", but the expected one was " + successCode + "!";
+            LOGGER.severe(message);
+            LOGGER.severe("Throwing a OM2MException...");
+            
+            message = "Response body was: " + responseBody;
+            
+            throw new OM2MException(message,
+                    ErrorCode.fromWebCode(responseOption.getIntegerValue()));
+        }
+        
+        LOGGER.info("Request has been accepted!");
+        
+        if (successCode == OM2MConstants.RESPONSE_ACCEPTED
+                || successCode == OM2MConstants.RESPONSE_NO_CONTENT)
+            return null;
+        
+        final JSONObject object = new JSONObject(responseBody);
+        
+        if (resourceType >= 0) {
+            // Parse directly
+            try {
+                return object.get(OM2MConstants.getFullResourceString(resourceType));
+            } catch (JSONException e) {
+                throw new OM2MException("Bad response! Response body was: " + responseBody, e,
+                        ErrorCode.OTHER);
+            }
+        }
         
         try {
-            uri = new URI(containerLocation);
-        } catch (URISyntaxException ex) {
-            throw new RuntimeException(ex);
-        }
-        
-        return uri;
-    }
-    
-    public static String getResourceString(int resourceType) {
-        switch (resourceType) {
-        case RESOURCE_TYPE_APPLICATION_ENTITY:
-            return RESOURCE_TYPE_STR_AE;
-        case RESOURCE_TYPE_CONTAINER:
-            return RESOURCE_TYPE_STR_CNT;
-        case RESOURCE_TYPE_CONTENT_INSTANCE:
-            return RESOURCE_TYPE_STR_CIN;
-        case RESOURCE_TYPE_URIL:
-            return RESOURCE_TYPE_STR_URIL;
-        case RESOURCE_TYPE_SUBSCRIPTION:
-            return RESOURCE_TYPE_STR_SUB;
-        case RESOURCE_TYPE_CSE_BASE:
-            return RESOURCE_TYPE_STR_CB;
-        case RESOURCE_TYPE_REMOTE_CSE:
-            return RESOURCE_TYPE_STR_CSR;
-        default:
-            throw new IllegalArgumentException("Unsupported resource type " + resourceType);
+            return OM2MResource.fromEnclosedJSONObject(object);
+        } catch (OM2MException e) {
+            throw new OM2MException("Bad response! Response body was: " + responseBody, e,
+                    ErrorCode.OTHER);
         }
     }
-    
-    /**
-     * @return null if timed out - CoapResponse otherwise
-     */
-    private CoapResponse performRequest(Request request) {
-        CoapClient client = new CoapClient();
-        
-        return client.advanced(request);
-    }
-    
-    /**
-     * @return null if timed out - CoapResponse otherwise
-     */
-    private CoapResponse performPost(String parentID, JSONObject body, int resourceType) {
-        Request request = Request.newPost();
-        
-        request.setURI(getURIFromID(parentID));
-        
-        OptionSet options = request.getOptions();
-        
-        options.addOption(new Option(OPTION_RESOURCE_TYPE, resourceType))
-               .addOption(new Option(OPTION_CREDENTIALS, credentials))
-               .setContentFormat(MediaTypeRegistry.APPLICATION_JSON)
-               .setAccept(MediaTypeRegistry.APPLICATION_JSON);
-        
-        request.setPayload(body.toString());
-        
-        LOGGER.log(Level.INFO, "Sending following payload: `" + body + "`");
-        LOGGER.log(Level.INFO, "Sending POST request to URI `" + request.getURI() + "`");
-        
-        return performRequest(request);
-    }
-    
-    private CoapResponse performGet(String resourceID) {
-        return performGet(resourceID, new String[0]);
-    }
-    
-    private CoapResponse performGet(String resourceID, String[] uriQueries) {
-        Request request = Request.newGet();
-        
-        request.setURI(getURIFromID(resourceID));
-        
-        OptionSet options = request.getOptions();
-        
-        options.addOption(new Option(OPTION_CREDENTIALS, credentials))
-               .setContentFormat(MediaTypeRegistry.APPLICATION_JSON)
-               .setAccept(MediaTypeRegistry.APPLICATION_JSON);
-        
-        for (String s : uriQueries)
-            options.addUriQuery(s);
-        
-        LOGGER.log(Level.INFO, "Sending GET request to URI `" + request.getURI() + "`");
-        
-        return performRequest(request);
-    }
-    
-    // This method probably leads to errors!
-    /*
-     * private JSONObject[] getAllChildrenOfType(String parentID, int resourceType,
-     * boolean last) { return getAllChildrenOfType(parentID, resourceType, last, new
-     * String[0]); }
-     */
-    /*
-     * private JSONObject[] getAllChildrenOfType(String parentID, int resourceType)
-     * { return getAllChildrenOfType(parentID, resourceType, false, new String[0]);
-     * }
-     */
-    
-    private String[] concatArrays(String[] first, String[] second) {
-        return Stream.concat(Arrays.stream(first), Arrays.stream(second))
-                     .toArray(String[]::new);
-    }
-    /*
-     * private JSONObject[] getAllChildrenOfType(String parentID, int resourceType,
-     * boolean last, String[] filters) { String[] uril =
-     * getAllChildrenIDOfType(parentID, resourceType, filters);
-     * 
-     * CoapResponse response;
-     * 
-     * List<JSONObject> values = new ArrayList<>();
-     * 
-     * // TODO: if "la" is put, resourceType changes! for (String uri : uril) { if
-     * (last) uri = concatURIs(uri, "la");
-     * 
-     * response = performGet(uri, new String[0]);
-     * 
-     * values.add((JSONObject) getObject(response, resourceType, RESPONSE_CONTENT));
-     * }
-     * 
-     * return values.toArray(new JSONObject[values.size()]); }
-     */
-    /*
-     * public ApplicationEntity[] getAllAE(String resourceID) { JSONObject[] objs =
-     * getAllChildrenOfType(resourceID, RESOURCE_TYPE_APPLICATION_ENTITY);
-     * 
-     * List<RemoteCSE> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new RemoteCSE(obj)); }
-     * 
-     * return list.toArray(new ApplicationEntity[list.size()]); }
-     * 
-     * public Container[] getAllContainers(String resourceID) { JSONObject[] objs =
-     * getAllChildrenOfType(resourceID, RESOURCE_TYPE_CONTAINER);
-     * 
-     * List<RemoteCSE> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new RemoteCSE(obj)); }
-     * 
-     * return list.toArray(new Container[list.size()]); }
-     */
-    
-    public OM2MResource create(String parentID, OM2MResource original) {
-        return create(parentID, original.getResourceType(), original.getCopyOptions());
-    }
-    
-    /*
-     * public RemoteCSE[] getAllCSEBase(String resourceID) { JSONObject[] objs =
-     * getAllChildrenOfType(resourceID, RESOURCE_TYPE_CSE_BASE);
-     * 
-     * List<RemoteCSE> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new RemoteCSE(obj)); }
-     * 
-     * return list.toArray(new RemoteCSE[list.size()]); }
-     */
-    
-    /*
-     * public ContentInstance getContainerValue(String resourceID) { CoapResponse
-     * response = performGet(concatURIs(resourceID, "la"));
-     * 
-     * JSONObject object = (JSONObject) getObject(response,
-     * RESOURCE_TYPE_CONTENT_INSTANCE, RESPONSE_CONTENT);
-     * 
-     * return new ContentInstance(object); }
-     */
-    
-    // TODO: this method is almost certainly WRONG!
-    /*
-     * private ContentInstance[] getAllLastValues(String resourceID) { JSONObject[]
-     * objs = getAllChildrenOfType(resourceID, RESOURCE_TYPE_CONTENT_INSTANCE,
-     * true);
-     * 
-     * List<ContentInstance> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new ContentInstance(obj)); }
-     * 
-     * return list.toArray(new ContentInstance[list.size()]); }
-     */
-    /*
-     * // This is ok
-     * 
-     * public ContentInstance[] getAllValues(String resourceID) { JSONObject[] objs
-     * = getAllChildrenOfType(resourceID, RESOURCE_TYPE_CONTENT_INSTANCE);
-     * 
-     * List<ContentInstance> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new ContentInstance(obj)); }
-     * 
-     * return list.toArray(new ContentInstance[list.size()]); }
-     * 
-     * public ContentInstance[] getAllLastValuesGreater(String resourceID, int
-     * stateTag) { JSONObject[] objs = getAllChildrenOfType(resourceID,
-     * RESOURCE_TYPE_CONTENT_INSTANCE);
-     * 
-     * List<ContentInstance> list = new ArrayList<>();
-     * 
-     * for (JSONObject obj : objs) { list.add(new ContentInstance(obj)); }
-     * 
-     * return list.toArray(new ContentInstance[list.size()]); }
-     * 
-     */
-    
 }

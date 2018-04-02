@@ -1,89 +1,64 @@
 package it.unipi.iot.parking.mn.install;
 
-import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
-import it.unipi.iot.parking.om2m.OM2M;
-import it.unipi.iot.parking.om2m.data.ApplicationEntity;
-import it.unipi.iot.parking.om2m.data.Container;
-import it.unipi.iot.parking.util.MNConfig;
+import it.unipi.iot.parking.AppConfig;
+import it.unipi.iot.parking.ParkConfig;
+import it.unipi.iot.parking.ParksDataHandler;
 
 public class Install {
-	// private static final String CREDENTIALS = "admin:admin";
-	// private static final String API_ID = "Server-Park-ID";
-	// private static final String APP_NAME = "Server-Park";
-	// private static final String[] CONTAINERS = { "cont-1", "cont-2", "cont-3",
-	// "cont-4" };
-	
-	private static final String			containerBaseName	= "park-";
-	
-	// private static final String HOST_ADDRESS = "localhost";
-	// private static final String HOST_ADDRESS = "192.168.193.128"; // "localhost"
-	// private static final String CSE_ID = "parking-mn-roba";
-	// private static final String PORT_NUMBER = "5684"; // 5684
-	// private static final String CSE_NAME = "park-r";
-	
-	static final ArrayList<Container>	containers			= new ArrayList<>();
-	
-	private static final String num3Char(int num) {
-		if (num > 99)
-			return "" + num;
-		
-		if (num > 9)
-			return "0" + num;
-		
-		return "00" + num;
-	}
-	
-	public static void main(String[] args) {
-		OM2M om2m_cse = OM2M.init(MNConfig.HOST_ADDRESS, MNConfig.PORT_NUMBER, MNConfig.CREDENTIALS);
-		
-		ApplicationEntity ae = om2m_cse.createApplicationEntity(MNConfig.CSE_ID, MNConfig.API,
-				MNConfig.APP_NAME);
-		
-		System.out.println("AE: " + ae.getResourceID());
-		
-		String containerName;
-		
-		int i = -1;
-		
-		containerName = containerBaseName + num3Char(i + 1);
-		Container container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-		om2m_cse.createContentInstance(container.getResourceID(), MNConfig.PARK_DATA, "type/manifest");
-		
-		System.out.println("CONT: " + container.getResourceID());
-		
-		for (i = 0; i < MNConfig.CONTAINERS_NUMBER; ++i) {
-			containerName = containerBaseName + num3Char(i + 1);
-			container = om2m_cse.createContainer(ae.getResourceID(), containerName);
-			om2m_cse.createContentInstance(container.getResourceID(), MNConfig.SPOT_DATA[i], "type/spot");
-			
-			System.out.println("CONT: " + container.getResourceID());
-		}
-		
-		/*
-		 * int i = 0;
-		 * 
-		 * while (i++ < 5) { try { Thread.sleep(2000); } catch (InterruptedException e)
-		 * { // TODO Auto-generated catch block e.printStackTrace(); }
-		 * 
-		 * JSONObject obj = new JSONObject(); obj.put("value", i * 5);
-		 * 
-		 * Content content = om2m_cse.createContent(c.getResourceID(), obj.toString());
-		 * }
-		 * 
-		 * i = 0; } else {
-		 * 
-		 * String response = om2m_cse.getLastValues(CSE_ID, 3); }
-		 * 
-		 * // System.out.println(response); return;
-		 * 
-		 * // Content[] values = om2m_cse.getLastValues(c.getResourceID(), 3); /*
-		 * while(i++ < values.length) { System.out.println(values[i].getStateTag() +
-		 * ": " + values[i].getContentValue().get("value")); }
-		 * 
-		 * System.out.println("FINISHED!");
-		 */
-		
-	}
-	
+    // TODO: in the end it will be `throws Exception!` However, some exceptions
+    // shall be caught, like when we try to double create something
+    public static void main(String[] args) throws TimeoutException {
+        for (final ParkConfig p : AppConfig.PARKS) {
+            ParksDataHandler.createPark(p);
+        }
+        
+        /*
+        // TODO: delete the following code, needed only to test discoveries of data
+        String[] parks = ParksDataHandler.getAllParksList();
+        
+        System.out.println(Arrays.toString(parks));
+        
+        for (String p : parks) {
+            System.out.println(ParksDataHandler.getParkData(p));
+        }
+        */
+        /*
+        // TODO: delete the following code, it was only needed to test the delete operation
+         
+        System.out.println("Waiting for user input, then we will delete an object...");
+        
+        try {
+            System.in.read();
+        } catch (IOException e) {
+        }
+        
+        String[] parks = ParksDataHandler.getDirectChildrenList("/" + AppConfig.CSE_ID);
+        
+        // I want to delete the first spot
+        OM2M node = new OM2M(new OM2MSession(AppConfig.HOST_ADDRESS, AppConfig.PORT_NUMBER,
+                AppConfig.CREDENTIALS));
+        
+        OM2MResource res;
+        try {
+            res = node.get(parks[0]);
+        } catch (OM2MException e1) {
+            throw new RuntimeException("Crap...");
+        }
+        
+        String[] spots = ParksDataHandler.getDirectChildrenList(res.getResourceID());
+        
+        
+        
+        // TODO: add more TimeoutExceptions
+        try {
+            node.delete(spots[0]);
+        } catch (OM2MException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        */
+    }
+    
 }

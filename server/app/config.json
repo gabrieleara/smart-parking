@@ -1,0 +1,9 @@
+{
+	"host_address": "127.0.0.1",
+	"port_number": "5683",
+	"cse_id": "parking",
+	"credentials": "admin:admin",
+	"cse_name": "parking-project",
+
+	"node_type": "IN"
+}

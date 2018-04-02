@@ -3,23 +3,27 @@
 	"port_number": "5684",
 	"cse_id": "parking-pisa-pisano",
 	"credentials": "admin:admin",
-	"api": "perking-api",
-	"app_name":"parks",
 	"cse_name": "parking-pisa-via-pisano",
+
+	"node_type": "MN",
 	"in_id": "parking",
-	"containers_number": 2,
-	"park_data":
+	"parks_data": [
 		{
-			"lat": "",
-			"lon":"",
-			"name": "",
-			"address": "",
-			"price": 1.2,
-			"openT": "",
-			"closeT": ""
-		},
-	"spot_data": [
-		{ "lat": "", "lon": "", "free": true, "user": null},
-		{ "lat": "", "lon": "", "free": true, "user": null}
+			"app_id": "parking-api",
+			"name":"parks",
+			"spots": [
+				{
+					"lat": "",
+					"lon":"",
+					"name": "",
+					"address": "",
+					"price": 1.2,
+					"openT": "",
+					"closeT": ""
+				},
+				{ "lat": "", "lon": "", "free": true, "user": null},
+				{ "lat": "", "lon": "", "free": true, "user": null}
+			]
+		}
 	]
 }

@@ -8,7 +8,9 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import it.unipi.iot.parking.om2m.OM2M;
+import it.unipi.iot.parking.om2m.ErrorCode;
+import it.unipi.iot.parking.om2m.OM2MConstants;
+import it.unipi.iot.parking.om2m.OM2MException;
 import it.unipi.iot.parking.util.DateConverter;
 
 /**
@@ -18,7 +20,7 @@ import it.unipi.iot.parking.util.DateConverter;
  * @author Gabriele Ara
  *
  */
-public abstract class OM2MResource implements Comparable<OM2MResource> {
+public class OM2MResource implements Comparable<OM2MResource> {
     final int      resourceType;
     final String   resourceID;
     final String   resourceName;
@@ -28,21 +30,22 @@ public abstract class OM2MResource implements Comparable<OM2MResource> {
     final String[] labels;
     
     public OM2MResource(JSONObject obj) {
-        resourceType = obj.getInt(OM2M.ATTR_RESOURCE_TYPE);
-        resourceID = obj.getString(OM2M.ATTR_RESOURCE_ID);
-        resourceName = obj.getString(OM2M.ATTR_RESOURCE_NAME);
-        parentID = obj.getString(OM2M.ATTR_PARENT_ID);
+        resourceType = obj.getInt(OM2MConstants.ATTR_RESOURCE_TYPE);
+        resourceID = obj.getString(OM2MConstants.ATTR_RESOURCE_ID);
+        resourceName = obj.getString(OM2MConstants.ATTR_RESOURCE_NAME);
+        parentID = obj.optString(OM2MConstants.ATTR_PARENT_ID); // Optional only because CSE
+                                                                // Resources do not have one
         
-        String strdate = obj.getString(OM2M.ATTR_CREATION_TIME);
+        String strdate = obj.getString(OM2MConstants.ATTR_CREATION_TIME);
         creationTime = DateConverter.fromString(strdate);
         
-        strdate = obj.getString(OM2M.ATTR_LAST_MOD_TIME);
+        strdate = obj.getString(OM2MConstants.ATTR_LAST_MOD_TIME);
         lastModifiedTime = DateConverter.fromString(strdate);
         
         List<String> labelsList = new ArrayList<>();
         
-        if (obj.has(OM2M.ATTR_LABELS)) {
-            JSONArray labelsArray = obj.getJSONArray(OM2M.ATTR_LABELS);
+        if (obj.has(OM2MConstants.ATTR_LABELS)) {
+            JSONArray labelsArray = obj.getJSONArray(OM2MConstants.ATTR_LABELS);
             for (Object s : labelsArray) {
                 
                 labelsList.add((String) s);
@@ -86,13 +89,13 @@ public abstract class OM2MResource implements Comparable<OM2MResource> {
         String creationT = DateConverter.fromDate(creationTime);
         String lastModifiedT = DateConverter.fromDate(lastModifiedTime);
         
-        obj.put(OM2M.ATTR_RESOURCE_TYPE, resourceType)
-           .put(OM2M.ATTR_RESOURCE_ID, resourceID)
-           .put(OM2M.ATTR_RESOURCE_NAME, resourceName)
-           .put(OM2M.ATTR_PARENT_ID, parentID)
-           .put(OM2M.ATTR_CREATION_TIME, creationT)
-           .put(OM2M.ATTR_LAST_MOD_TIME, lastModifiedT)
-           .put(OM2M.ATTR_LABELS, new JSONArray(labels));
+        obj.put(OM2MConstants.ATTR_RESOURCE_TYPE, resourceType)
+           .put(OM2MConstants.ATTR_RESOURCE_ID, resourceID)
+           .put(OM2MConstants.ATTR_RESOURCE_NAME, resourceName)
+           .put(OM2MConstants.ATTR_PARENT_ID, parentID)
+           .put(OM2MConstants.ATTR_CREATION_TIME, creationT)
+           .put(OM2MConstants.ATTR_LAST_MOD_TIME, lastModifiedT)
+           .put(OM2MConstants.ATTR_LABELS, new JSONArray(labels));
         
         return obj;
     }
@@ -123,47 +126,93 @@ public abstract class OM2MResource implements Comparable<OM2MResource> {
     }
     
     // TODO: change copy options to something better
-    public String[] getCopyOptions() {
+    public String[] getCopyParameters() {
         return new String[0];
     }
     
+    public static Object fromEnclosedJSONObject(JSONObject obj) throws OM2MException {
+        final int[] tests = { OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY,
+                OM2MConstants.RESOURCE_TYPE_CONTAINER, OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE,
+                OM2MConstants.RESOURCE_TYPE_CSE_BASE, OM2MConstants.RESOURCE_TYPE_REMOTE_CSE,
+                OM2MConstants.RESOURCE_TYPE_SUBSCRIPTION, OM2MConstants.RESOURCE_TYPE_URIL };
+        
+        String key;
+        
+        for (int testCode : tests) {
+            key = OM2MConstants.getFullResourceString(testCode);
+            
+            if (obj.has(key)) {
+                return obj.get(key);
+            }
+        }
+        
+        throw new OM2MException(ErrorCode.OTHER);
+    }
+    
+    // TODO: add an exception also here maybe?
     public static OM2MResource fromJSONObject(JSONObject obj) {
         OM2MResource res = null;
         
-        switch (obj.getInt(OM2M.ATTR_RESOURCE_TYPE)) {
-        case OM2M.RESOURCE_TYPE_APPLICATION_ENTITY:
+        switch (obj.getInt(OM2MConstants.ATTR_RESOURCE_TYPE)) {
+        case OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY:
             res = new ApplicationEntity(obj);
             break;
-        case OM2M.RESOURCE_TYPE_CONTAINER:
+        case OM2MConstants.RESOURCE_TYPE_CONTAINER:
             res = new Container(obj);
             break;
-        case OM2M.RESOURCE_TYPE_CONTENT_INSTANCE:
+        case OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE:
             res = new ContentInstance(obj);
             break;
-        case OM2M.RESOURCE_TYPE_REMOTE_CSE:
-            res = new RemoteCSE(obj);
+        case OM2MConstants.RESOURCE_TYPE_REMOTE_CSE:
+            res = new RemoteNode(obj);
             break;
-        case OM2M.RESOURCE_TYPE_SUBSCRIPTION:
+        case OM2MConstants.RESOURCE_TYPE_SUBSCRIPTION:
             res = new Subscription(obj);
             break;
         default:
-            // Other types are not implemented
+            // Other types are not explicitly implemented, but we can anyway use the default
+            // fallback class
+            res = new OM2MResource(obj);
         }
         return res;
     }
-
+    
+    public static boolean shouldBeCopied(OM2MResource resource) {
+        switch (resource.getResourceType()) {
+        case OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY:
+        case OM2MConstants.RESOURCE_TYPE_CONTAINER:
+        case OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE:
+            // These should be copied
+            return true;
+        default:
+            // These should not!
+            return false;
+        }
+    }
+    
+    public static boolean shouldBeSubscribed(OM2MResource resource) {
+        switch (resource.getResourceType()) {
+        case OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY:
+        case OM2MConstants.RESOURCE_TYPE_CONTAINER:
+            // These should be subscribed
+            return true;
+        default:
+            // These should not!
+            return false;
+        }
+    }
+    
     @Override
     public int compareTo(OM2MResource other) {
         Date d0 = this.getCreationTime();
         Date d1 = other.getCreationTime();
         
         int res = d0.compareTo(d1);
-
+        
         if (res == 0 && !this.equals(other))
             res = -1;
         
         return res;
     }
-    
     
 }
