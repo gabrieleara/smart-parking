@@ -251,7 +251,7 @@ public class ParksDataHandler {
             return copyBasePath;
         }
         
-        return uril[0];
+        return getResourceIDFromPath(uril[0]);
         
         /*
          * filters = new LabelsFactory().setParentID(AppConfig.CSE_ID) .getFilters();
