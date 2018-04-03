@@ -1,6 +1,9 @@
 package it.unipi.iot.parking.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletException;
@@ -8,6 +11,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.om2m.data.RemoteNode;
@@ -44,7 +50,7 @@ public class ParkingServlet extends HttpServlet {
         
         // Following line is used to invalidate code and simulate a reboot of the system
         // when in debug mode, modify that line so that the code needs to be rebooted
-        System.out.println("Prova1");
+        System.out.println("Prova");
         
         NodeSubscriber nodeSubscriber = new NodeSubscriber(server, "in-subscriber");
         
@@ -70,43 +76,107 @@ public class ParkingServlet extends HttpServlet {
         
     }
     
+    private class Bounds {
+        final double minLatitude, minLongitude, maxLatitude, maxLongitude;
+        
+        public Bounds(double minLatitude, double minLongitude, double maxLatitude,
+                double maxLongitude) {
+            super();
+            this.minLatitude = minLatitude;
+            this.minLongitude = minLongitude;
+            this.maxLatitude = maxLatitude;
+            this.maxLongitude = maxLongitude;
+        }
+        
+        public boolean acceptPark(JSONObject parkDescriptor) {
+            final double latitude;
+            final double longitude;
+            
+            latitude = parkDescriptor.getDouble("lat");
+            longitude = parkDescriptor.getDouble("lon");
+            
+            if (latitude < minLatitude || latitude > maxLatitude)
+                return false;
+            if (longitude < minLongitude || longitude > maxLongitude)
+                return false;
+            
+            return true;
+        }
+        
+    }
+    
     /**
      * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
      *      response)
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        /*
-         * PrintWriter writer = response.getWriter();
-         * 
-         * JSONObject responseObj = new JSONObject();
-         * 
-         * OM2M conn = OM2M.getInstance();
-         * 
-         * String[] uril = conn.getAllChildrenIDOfType("parking",
-         * OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE, new String[] {
-         * "lbl=type/manifest" });
-         * 
-         * List<ContentInstance> parks = new ArrayList<>();
-         * 
-         * for (String uri : uril) { ContentInstance ci = (ContentInstance)
-         * conn.getResourceFromID(uri, OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE);
-         * 
-         * if (ci != null) parks.add(ci); }
-         * 
-         * // ContentInstance[] parksInstances = parks.toArray(new //
-         * ContentInstance[parks.size()]); JSONArray arr = new JSONArray();
-         * 
-         * for (ContentInstance in : parks) { arr.put(in.getContentValue()); }
-         * 
-         * responseObj.put("parks", arr);
-         * 
-         * writer.append(responseObj.toString(2));
-         * 
-         * //
-         * response.getWriter().append("Served at: ").append(request.getContextPath());
-         * 
-         */
+        final PrintWriter writer;
+        final JSONObject responseObj;
+        final String[] parks;
+        final List<JSONObject> parkList;
+        final JSONArray parksArray;
+        final Bounds bounds;
+        double minLat, minLon, maxLat, maxLon;
+        
+        try {
+            minLat = Double.parseDouble(request.getParameter("minLat"));
+        } catch (NullPointerException | NumberFormatException e) {
+            minLat = Double.NEGATIVE_INFINITY;
+        }
+        try {
+            minLon = Double.parseDouble(request.getParameter("minLon"));
+        } catch (NullPointerException | NumberFormatException e) {
+            minLon = Double.NEGATIVE_INFINITY;
+        }
+        try {
+            maxLat = Double.parseDouble(request.getParameter("maxLat"));
+        } catch (NullPointerException | NumberFormatException e) {
+            maxLat = Double.POSITIVE_INFINITY;
+        }
+        try {
+            maxLon = Double.parseDouble(request.getParameter("maxLon"));
+        } catch (NullPointerException | NumberFormatException e) {
+            maxLon = Double.POSITIVE_INFINITY;
+        }
+        
+        bounds = new Bounds(minLat, minLon, maxLat, maxLon);
+        
+        // TODO: switch to application/javascript in deploy
+        //response.setContentType("application/javascript");
+        response.setContentType("text/json");
+        writer = response.getWriter();
+        responseObj = new JSONObject();
+        
+        try {
+            parks = ParksDataHandler.getAllParksList();
+            
+            parkList = new ArrayList<>();
+            
+            for (String park : parks) {
+                JSONObject parkData = ParksDataHandler.getParkData(park);
+                
+                if (!bounds.acceptPark(parkData))
+                    continue;
+                
+                parkList.add(parkData);
+            }
+            
+            parksArray = new JSONArray(parkList);
+            
+            responseObj.put("parks", parksArray);
+            
+            writer.append(responseObj.toString(2));
+            /*
+             * response.getWriter() .append("Served at: ")
+             * .append(request.getContextPath());
+             */
+        } catch (TimeoutException e) {
+            // What to do if IN is unavailable?
+            throw new RuntimeException(
+                    "IN node unreachable! Contact system administrator as soon as possible!", e);
+        }
+        
     }
     
     /**

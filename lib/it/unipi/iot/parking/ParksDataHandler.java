@@ -1,9 +1,11 @@
 package it.unipi.iot.parking;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.om2m.ErrorCode;
@@ -69,8 +71,12 @@ public class ParksDataHandler {
         factory = new LabelsFactory().setParentID(parentID)
                                      .setResourceName(containerName) // TODO: probably unused
                                      .setSpotName(containerName)
-                                     .setParkID(parentID)
-                                     .setType("spot");
+                                     .setParkID(parentID);
+        
+        if (index == 0)
+            factory.setType("manifest");
+        else
+            factory.setType("spot");
         
         labels = factory.getLabels();
         
@@ -82,7 +88,7 @@ public class ParksDataHandler {
                .setSpotName(containerName);
         
         if (index == 0)
-            factory.setType("manifest");
+            factory.setType("manifest-data");
         else
             factory.setType("instance");
         
@@ -110,20 +116,30 @@ public class ParksDataHandler {
     
     public static String[] getAllParksList() throws OM2MException, TimeoutException {
         final String[] filters;
+        final String[] uril;
+        final List<String> parkList;
+        final String[] parkIDs;
         
         filters = new LabelsFactory().setType("park")
                                      .getFilters();
         
-        return OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        parkList = new ArrayList<>();
+        
+        for (String uri : uril) {
+            parkList.add(getResourceIDFromPath(uri));
+        }
+        
+        parkIDs = parkList.toArray(new String[parkList.size()]);
+        
+        return parkIDs;
     }
     
-    // TODO: add more data here if necessary
-    public static JSONObject getParkData(String parkPath) throws OM2MException, TimeoutException {
-        final String parkID;
-        final String[] filters;
-        final String[] uril;
-        
-        parkID = getResourceIDFromPath(parkPath);
+    public static JSONObject getParkData(String parkID) throws OM2MException, TimeoutException {
+        String[] filters;
+        String[] uril;
+        final JSONObject parkStatus;
+        final JSONArray spots;
         
         filters = new LabelsFactory().setType("manifest")
                                      .setParkID(parkID)
@@ -131,10 +147,39 @@ public class ParksDataHandler {
         
         uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
         
-        if (uril.length > 1)
+        if (uril.length > 1 || uril.length < 1)
             throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
         
-        return ((ContentInstance) OM2M_NODE.get(uril[0])).getContentValue();
+        parkStatus = ((ContentInstance) OM2M_NODE.get(uril[0] + "/la")).getContentValue();
+        
+        // Get list of spots and add each one to a JSONArray
+        spots = new JSONArray();
+        
+        filters = new LabelsFactory().setType("spot")
+                                     .setParkID(parkID)
+                                     .getFilters();
+        
+        uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        for (String uri : uril) {
+            ContentInstance value = (ContentInstance) OM2M_NODE.get(uri + "/la");
+            JSONObject spotStatus = value.getContentValue();
+            spots.put(spotStatus);
+        }
+        
+        parkStatus.put("spots", spots);
+        
+        return parkStatus;
+    }
+    
+    // TODO: add more data here if necessary
+    public static JSONObject getParkDataFromURI(String parkPath)
+            throws OM2MException, TimeoutException {
+        final String parkID;
+        
+        parkID = getResourceIDFromPath(parkPath);
+        
+        return getParkData(parkID);
     }
     
     public static String[] getAllRemoteNodes() throws OM2MException, TimeoutException {
@@ -301,6 +346,7 @@ public class ParksDataHandler {
         final String remoteID;
         final String parkID;
         final String spotName;
+        final String type;
         final String[] remoteLabels;
         final String[] labels;
         
@@ -308,14 +354,15 @@ public class ParksDataHandler {
         remoteID = original.getResourceID();
         spotName = remoteName;
         remoteLabels = original.getLabels();
-        parkID = LabelsFactory.getParkID(remoteLabels);
+        parkID = localParentID;
+        type = LabelsFactory.getType(remoteLabels);
         
         labels = new LabelsFactory().setParentID(localParentID)
                                     .setParkID(parkID)
                                     .setRemoteID(remoteID)
                                     .setResourceName(remoteName)
                                     .setSpotName(spotName)
-                                    .setType("spot")
+                                    .setType(type)
                                     .getLabels();
         
         return OM2M_NODE.createContainer(localParentID, remoteName, labels);
@@ -340,7 +387,7 @@ public class ParksDataHandler {
         remoteLabels = original.getLabels();
         
         spotName = LabelsFactory.getSpotName(remoteLabels);
-        parkID = LabelsFactory.getParkID(remoteLabels);
+        parkID = LabelsFactory.getParkID(get(localParentID).getLabels());
         type = LabelsFactory.getType(remoteLabels);
         
         labels = new LabelsFactory().setParentID(localParentID)

@@ -13,8 +13,8 @@
 			"name":"parks",
 			"spots": [
 				{
-					"lat": "",
-					"lon":"",
+					"lat": "75",
+					"lon":"80",
 					"name": "",
 					"address": "",
 					"price": 1.2,

@@ -102,7 +102,7 @@ public class DuplicatorThread extends Thread {
                 } catch (OM2MException e) {
                     if (e.getCode() == ErrorCode.NAME_ALREADY_PRESENT) {
                         // Keep going, it's all fine and it is an intended behavior
-                        
+                        System.out.println("Don't worry, OM2MException caught properly!");
                         // If needed, implement this
                         // copy = ParksDataHandler.get();
                     } else {

@@ -18,7 +18,7 @@ public class DateConverter {
 		formatter.setCalendar(calendar);
 	}
 	
-	public static Date fromString(String string) {
+	public synchronized static Date fromString(String string) {
 		try {
 			calendar.setTime(formatter.parse(string));
 		} catch (ParseException ex) {
@@ -28,7 +28,7 @@ public class DateConverter {
 		return calendar.getTime();
 	}
 	
-	public static String fromDate(Date d) {
+	public synchronized static String fromDate(Date d) {
 		return formatter.format(d);
 	}
 	
