@@ -1,0 +1,65 @@
+<template>
+    <div class="modal fade" id="signup-modal" tabindex="-1" role="dialog" aria-labelledby="signup-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signup-modal-label">Sign up</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-signup alert-danger alert-dismissable fade d-none">
+                        <strong class="signup-error-title"></strong><span class="signup-error-text"></span>
+                    </div>
+                    <div class="alert alert-signup-succ alert-success alert-dismissable fade d-none">
+                        <strong class="signup-success-title"></strong><span class="signup-success-text"></span>
+                    </div>
+                    <form id="form-signup" method="post" enctype="multipart/form-data" data-toggle="validator">
+                        <div class="form-group">
+                            <label for="email" class="form-control-label">Email:</label>
+                            <input type="email" class="form-control" name="email" id="signup-email" data-vindicate="required|format:email|active">
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="username" class="form-control-label">Username:</label>
+                            <input type="text" class="form-control" name="username" id="signup-username" data-vindicate="required|format:alphanumeric|active">
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="password" class="form-control-label">Password:</label>
+                            <input type="password" class="form-control" name="password" id="signup-password" data-vindicate="required|active">
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="name" class="form-control-label">Name:</label>
+                            <input type="text" class="form-control" name="name" id="signup-name" data-vindicate="required|active">
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="surname" class="form-control-label">Surname:</label>
+                            <input type="text" class="form-control" name="surname" id="signup-surname" data-vindicate="required|active">
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="bio" class="form-control-label">Bio:</label>
+                            <textarea class="form-control" name="bio" id="signup-bio"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="avatar" class="form-control-label">Avatar (max 1.5 MB):</label>
+                            <input type="file" accept="image/*" class="form-control" name="avatar" id="signup-avatar">
+                        </div>
+                        <div class="form-group">
+                            <label for="cover" class="form-control-label">Cover (max 1.5 MB):</label>
+                            <input type="file" accept="image/*" class="form-control" name="cover" id="signup-cover">
+                        </div>                
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" onclick="submit_signup();" class="btn btn-primary">Sign up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

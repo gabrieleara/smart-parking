@@ -1,0 +1,28 @@
+/* 
+// -----------------------
+// 0 - General
+// -----------------------
+*/
+
+.navbar-title {
+    color: white;
+    font-family: 'Work Sans', sans-serif;
+    margin: 0 5px;
+}
+
+.navbar-nav a {
+    color: white !important;
+    font-family: 'Work Sans', sans-serif;
+    line-height: 21px;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.75px;
+}
+
+.navbar-nav a:hover {
+    color: #DDD !important;
+}
+
+.navbar-inverse .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}

@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>SPARK - Home</title>
+    <title>spark - Home</title>
     
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS - FontAwesome CSS - Main CSS -->
+    <!-- Bootstrap CSS - FontAwesome CSS - Main CSS - Web FONT -->
     <link rel="stylesheet" href="css/assets/bootstrap.css">
     <link rel="stylesheet" href="css/assets/font-awesome.css">
     <link rel="stylesheet" href="css/style.css">
@@ -22,8 +22,32 @@
     <script type="text/javascript" src="js/assets/vindicate.js"></script>
     <script type="text/javascript" src="js/assets/path.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
-    <script type="text/javascript" src="js/map.js"></script>
-    <script type="text/javascript" src="js/autocomplete.js"></script>
+    <script type="text/javascript" src="js/appmanager.js"></script>
+    <script type="text/javascript" src="js/request.js"></script>
+
+    <!-- Webcomponent: CONSTANT -->
+    <script type="text/javascript" src="js/constants.js"></script>
+
+    <!-- Webcomponent: NAVBAR -->
+    <link rel="stylesheet" href="components/navbar/css/style.css">
+    <link rel="import" href="components/navbar/html/navbar.html">
+    <script type="text/javascript" src="components/navbar/js/navbar.js"></script>
+
+    <!-- Webcomponent: SIDEBAR -->
+    <link rel="import" href="components/sidebar/html/list-empty.html">
+    <link rel="import" href="components/sidebar/html/list-item-location.html">
+    <link rel="import" href="components/sidebar/html/list-details.html">
+    <link rel="stylesheet" href="components/sidebar/css/style.css">
+    <script type="text/javascript" src="components/sidebar/js/sidebar.js"></script>
+    <script type="text/javascript" src="components/sidebar/js/drawer.js"></script>
+
+    <!-- Webcomponents: MAP -->
+    <link rel="import" href="components/map/html/map.html">
+    <link rel="stylesheet" href="components/map/css/style.css">
+    <script type="text/javascript" src="components/map/js/autocomplete.js"></script>
+    <script type="text/javascript" src="components/map/js/map.js"></script>
+    <script type="text/javascript" src="components/map/js/marker.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDCcbkhrvHJ-Fy3S2NRvdwuxa1wk1XdxZY&libraries=places"></script>
 
     <!-- Favicon & Preferences -->
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
@@ -41,66 +65,52 @@
 
   <body>
 
-    <!-- NAVBAR BEGIN -->
-    <nav class="navbar navbar-toggleable-md navbar-inverse bg-main shadowed">
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <a class="navbar-brand" href="index.html">
-            <img src="img/logo.gif" width="30" height="30" class="d-inline-block align-top" alt="">
-            <span class=navbar-title>spark</span>
-        </a>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item" id="btn-about">
-                    <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">About</a>
-                </li>
-                <li class="nav-item" id="btn-login">
-                    <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Login</a>
-                </li>
-                <li class="nav-item" id="btn-signup">
-                    <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Sign up</a>
-                </li>
-                <li class="nav-item" id="btn-dashboard">
-                    <a class="nav-link" href="#" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">Dashboard</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <!-- NAVBAR END -->
+    <!-- NAVBAR COMPONENT HERE -->
+    <header></header>
 
     <!-- COVER BEGIN -->
     <div class="container-fluid cover-container bg-main" id="main-container">
         <div class="moon"></div>
         <div class="mars"></div>
     
-        <!-- JUMBO BEGIN -->
         <div class="row jumbo">
             <img class="heart" src="img/earth@2x.png"/>
 
             <div class="col-sm-4"></div>
-            <div class="col-sm-4">
+
+            <div class="col-sm-4 map-form">
                 <h1>Happy parking.</h1>
-                <p class="brand-text">The brand new way to find easily parking spot and save money!</p>
+                <p class="brand-text">The brand new way to find easily parking spot!</p>
                 <form class="parking-search">
                     <div class="form-group">
-                        <input type="text" class="form-control" id="place-input" placeholder="Where are you going?" onFocus="getLocation()">
+                        <input type="text" class="form-control" id="place-input" placeholder="Where are you going?">
                     </div>
                     <div class="form-group">
                         <a href="#" class="btn btn-primary btn-search" onclick="searchOnMap()">Search</a>
                     </div>
                 </form>
             </div>
-            <div class="col-sm-4"></div>
-        </div>
-        <!-- JUMBO END -->
 
-        
+            <div class="col-sm-4"></div>
+
+        </div>
     </div>
     <!-- COVER END -->
     
+    <!-- APPLICATION BEGIN -->
+    <div class="container-fluid cover-container bg-faded" id="map-container">
+        <div class="row row-full-width">
+            
+            <!-- MAP COMPONENT HERE -->
+            <div class="col-sm-8 map-col"></div>
+
+            <!-- SIDEBAR COMPONENT HERE -->
+            <div class="col-sm-4 list-sidebar"></div>
+            
+        </div>
+    </div>
+    <!-- APPLICATION END -->
+
     <!-- MODAL LOGIN BEGIN -->
     <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal-label" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -118,12 +128,12 @@
                     <form id="form-login" method="post" data-toggle="validator">
                     <div class="form-group">
                         <label for="username" class="form-control-label">Username:</label>
-                        <input type="text" class="form-control" name="username" id="login-username" data-vindicate="required|format:alphanumeric">
+                        <input type="text" class="form-control" name="username" id="login-username">
                         <small class="form-control-feedback"></small>
                     </div>
                     <div class="form-group">
                         <label for="password" class="form-control-label">Password:</label>
-                        <input type="password" class="form-control" name="password" id="login-password" data-vindicate="required">
+                        <input type="password" class="form-control" name="password" id="login-password">
                         <small class="form-control-feedback"></small>
                     </div>
                     </form>
@@ -169,29 +179,7 @@
                             <label for="password" class="form-control-label">Password:</label>
                             <input type="password" class="form-control" name="password" id="signup-password" data-vindicate="required|active">
                             <small class="form-control-feedback"></small>
-                        </div>
-                        <div class="form-group">
-                            <label for="name" class="form-control-label">Name:</label>
-                            <input type="text" class="form-control" name="name" id="signup-name" data-vindicate="required|active">
-                            <small class="form-control-feedback"></small>
-                        </div>
-                        <div class="form-group">
-                            <label for="surname" class="form-control-label">Surname:</label>
-                            <input type="text" class="form-control" name="surname" id="signup-surname" data-vindicate="required|active">
-                            <small class="form-control-feedback"></small>
-                        </div>
-                        <div class="form-group">
-                            <label for="bio" class="form-control-label">Bio:</label>
-                            <textarea class="form-control" name="bio" id="signup-bio"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="avatar" class="form-control-label">Avatar (max 1.5 MB):</label>
-                            <input type="file" accept="image/*" class="form-control" name="avatar" id="signup-avatar">
-                        </div>
-                        <div class="form-group">
-                            <label for="cover" class="form-control-label">Cover (max 1.5 MB):</label>
-                            <input type="file" accept="image/*" class="form-control" name="cover" id="signup-cover">
-                        </div>                
+                        </div>         
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -203,33 +191,5 @@
     </div>
     <!-- MODAL SIGNUP END -->
 
-    <div class="container-fluid cover-container bg-faded" id="map-container">
-        <div class="row row-full-width">
-            <div class="col-sm-8 map-col">
-                <div class="form-group search-field">
-                    <input type="text" class="form-control" id="search" placeholder="Search again" onFocus="getLocation()">
-                </div>
-                <div id="map"></div>
-
-            </div>
-
-            <div class="col-sm-4 list-sidebar">
-                <div class="centerfix">
-                    <div class="container-fluid container-empty">
-                        <div class="row row-empty">
-                            <img class="sad-icon" src="img/sad-icon.svg" alt="No places found">
-                        </div>
-                        <div class="row row-empty">
-                            <span class="empty-text">No places found in the selected area.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCrzA3Nparc6cIAMN3dphdT8OOUkTo6fw&libraries=places"></script>
   </body>
 </html>

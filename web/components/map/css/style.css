@@ -1,0 +1,69 @@
+/* 
+----------------------
+MAP CSS FILE 
+----------------------
+
+INDEX:
+    0 - General
+    1 - Autocomplete
+*/
+
+
+
+/* 
+// -----------------------
+// 0 - General
+// -----------------------
+*/
+
+#map-container {
+    display: none;
+}
+
+.row-full-width {
+    width: 100%;
+    height: 100%;
+    margin-right: 0px;
+    margin-left: 0px;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
+}
+
+.map-col {
+    padding: 0;
+    display: flex;
+}
+
+#map {
+    flex-grow: 1;
+}
+
+.search-field {
+    z-index: 2;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+#search {
+    width: 250px;
+}
+
+/* 
+// -----------------------------
+// 1 - Autocomplete (google re-style)
+// -----------------------------
+*/
+
+.pac-item {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 300;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.pac-container:after {
+    background-image: none !important;
+    height: 0px;
+}
