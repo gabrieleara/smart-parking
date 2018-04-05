@@ -1,0 +1,251 @@
+/* 
+--------------------------
+SIDEBAR COMPONENT CSS FILE 
+--------------------------
+
+INDEX:
+    0 - General
+    1 - Single items
+    2 - Location details
+    3 - List empty
+*/
+
+/* 
+// -----------------------
+// 0 - General
+// -----------------------
+*/
+
+.list-sidebar {
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+/* 
+// -----------------------
+// 1 - Single items
+// -----------------------
+*/
+
+.location-list-item {
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
+    margin: 10px 15px;
+    border-radius: 3px;
+}
+
+.location-list-item:hover {
+    box-shadow: 0 3px 10px 0 rgba(0,0,0,.4);
+    transform: scale(1.012);
+}
+
+.location-container-link, .location-container-link:hover {
+    text-decoration: none;
+}
+
+.location-container-link:link, .location-container-link:hover, .location-container-link:active, .location-container-link:visited {
+    text-decoration: none;
+}
+
+.location-list-id {
+    display: none;
+}
+
+.location-list-title {
+    border-radius: 3px 3px 0px 0px;
+    background-color: #4f99e2;
+    color: white;
+    padding: 0.5em;
+}
+
+.location-list-title > h5 {
+    font-weight: 300;
+    margin-bottom: 0px;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.location-list-content .row {
+    padding: 10px 0;
+}
+
+.location-list-content span {
+    display: block;
+    text-align: center;
+    color: #555;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.location-list-price-text, .location-list-park-text {
+    font-size: 2em;
+}
+
+.location-list-price-label, .location-list-park-label {
+    font-size: 1em;
+}
+
+.location-list-footer {
+    border-top: 1px solid #BBB;
+}
+
+.location-list-footer span {
+    display: block;
+    text-align: center;
+    color: #555;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.location-list-footer .row {
+    padding: 5px 0;
+}
+
+.green {
+    color: #1BC98E;
+}
+
+.red {
+    color: #E64759;
+}
+
+/* 
+// -----------------------
+// 2 - Location details
+// -----------------------
+*/
+
+.location-details {
+    overflow: scroll;
+    height: calc(100vh - 54px);
+}
+
+.location-details-id {
+    display: none;
+}
+
+.location-details-title {
+    background-color: #4f99e2;
+    color: white;
+    padding: 2em 1em;
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
+}
+
+.location-details-title > h4 {
+    display: inline-block;
+    font-weight: 300;
+    margin-bottom: 0px;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.location-details-close {
+    border-radius: 22px;
+    cursor: pointer;
+    float: right;
+    display: flex;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+}
+
+.location-details-close:hover {
+    background-color: rgba(0,0,0,.1);
+}
+
+.location-details-content .row-spaced {
+    padding: 20px 0;
+}
+
+.location-details-content span {
+    display: block;
+    text-align: center;
+    color: #555;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.location-details-content a {
+    display: block;
+    text-align: center;
+}
+
+.location-details-price-text, .location-details-park-text {
+    font-size: 2em;
+}
+
+.location-details-price-label, .location-details-park-label {
+    font-size: 1em;
+}
+
+.location-details-content .col-12 {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.btn-directions {
+    color: white;
+    line-height: 30px;
+    height: 50px;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.row-title {
+    border-top: 1px solid #BBB;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+.row-title h5 {
+    color: #4f99e2;
+    font-weight: 300;
+}
+
+.row-caption {
+    padding-top: 5px;
+    padding-bottom: 20px;
+}
+
+.location-details-address-icon {
+    font-size: 2em;
+}
+
+.location-details-clock-icon {
+    font-size: 2em;
+}
+
+.location-details-clock-text {
+    line-height: 2.6em;
+}
+
+.location-details-state-icon {
+    font-size: 2em;
+}
+
+.location-details-state-text {
+    line-height: 2.6em;
+}
+
+.row .col-9 span {
+    text-align: left;
+}
+
+/* 
+// -----------------------
+// 3 - List empty
+// -----------------------
+*/
+
+.centerfix {
+    display: flex;
+    align-items: center;
+    height: calc(100vh - 54px);
+}
+
+.row-empty {
+    text-align: center;
+    text-align: center;
+    color: #555;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.empty-text, .sad-icon {
+    display: block;
+    margin: 0 auto;
+}
