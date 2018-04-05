@@ -14,21 +14,17 @@ import it.unipi.iot.parking.om2m.data.OM2MResource;
 public class CopyResourceSubscriber extends ResourceSubscriber {
     private final String baseCopyURI;
     
-    // TODO:
+    // FIXME:
     // Si assume che non arrivino richieste di cambio di stato eccessivamente rapide
     // da parte delle CI
     public CopyResourceSubscriber(ResourceSubscriber parentResource, String name,
             String baseCopyURI) {
         super(parentResource, name);
-        // TODO: shall restore the previous set of subscriptions: NO, SEPARATE METHOD
-        
         this.baseCopyURI = baseCopyURI;
     }
     
     public CopyResourceSubscriber(SubscriptionServer server, String name, String baseCopyURI) {
         super(server, name);
-        // TODO: shall restore the previous set of subscriptions
-        
         this.baseCopyURI = baseCopyURI;
     }
     
@@ -51,7 +47,7 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
         }
         
         if (isSubscriptionDeletion(body)) {
-            // TODO: for now do nothing, maybe later interrupt copyCreator thread
+            // Do nothing, it's not that we can do something about it
             System.out.println("Received a Subscrption Deletion Request!");
             return;
         }
@@ -61,16 +57,16 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
         
         if (resource == null)
             return;
-            
-        // TODO: this is a blocking call and it does not ensure the actual order when
-        // subscription takes too long
+        
+        // FIXME: that this is a synchronized call and may take a while
         DuplicatorThread.getInstance()
                         .requestCopy(resource, this);
         
     }
     
     protected void postProcess(OM2MResource resource) {
-        // TODO: notify someone that something has changed maybe?
+        // TODO: in the future, notify someone that something has changed, maybe
+        // requiring an optional copy parameter with the newly created resource
         
         if (OM2MResource.shouldBeSubscribed(resource))
             addSubscription(resource.getResourceID());
@@ -85,10 +81,6 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
         
         @Override
         public void run() {
-            /*
-             * try { sleep(5000); } catch (InterruptedException e) { // Do nothing }
-             */
-            
             final String[] children;
             final List<OM2MResource> copyList;
             
@@ -112,10 +104,11 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
                     copyList.add(child);
                 }
                 
-                DuplicatorThread.getInstance().requestAll(copyList, CopyResourceSubscriber.this);
+                DuplicatorThread.getInstance()
+                                .requestAll(copyList, CopyResourceSubscriber.this);
                 
             } catch (TimeoutException e) {
-                // TODO: keepalive for nodes
+                // TODO: implement a keep-alive for nodes
                 throw new RuntimeException("The remote node did not reply! Re-subscribe later?", e);
             }
             

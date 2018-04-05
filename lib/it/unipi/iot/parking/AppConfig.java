@@ -18,7 +18,9 @@ public class AppConfig {
     public static final String NODE_TYPE;   // Can be either "IN" or "MN"
     // public static final String IN_ID;
     
-    // TODO: this is only for the MN, the IN is agnostic to this
+    /**
+     * Only for MN, null for IN
+     */
     public final static ParkConfig[] PARKS;
     
     static {
