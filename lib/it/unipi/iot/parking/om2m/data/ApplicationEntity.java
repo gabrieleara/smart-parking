@@ -32,9 +32,4 @@ public class ApplicationEntity extends OM2MResource {
         return obj;
     }
     
-    @Override
-    public String[] getCopyParameters() {
-        return new String[] { getApplicationID(), getResourceName() };
-    }
-    
 }

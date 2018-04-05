@@ -37,8 +37,4 @@ public class Subscription extends OM2MResource {
         return obj;
     }
     
-    /*
-     * public String[] getCopyOptions() { return new String[0]; }
-     */
-    
 }

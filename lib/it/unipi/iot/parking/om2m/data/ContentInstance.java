@@ -48,22 +48,4 @@ public class ContentInstance extends OM2MResource {
         return obj;
     }
     
-    @Override
-    public String[] getCopyParameters() {
-        // TODO: should add time information to the value!
-        
-        String[] options = new String[labels.length + 1];
-        
-        options[0] = content.toString();
-        
-        int i = 1;
-        for (String label : labels) {
-            options[i++] = label;
-        }
-        
-        // System.arraycopy(labels, 0, content, 1, labels.length);
-        
-        return options;
-    }
-    
 }

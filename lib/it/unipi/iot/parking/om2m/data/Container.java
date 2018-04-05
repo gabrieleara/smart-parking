@@ -45,9 +45,4 @@ public class Container extends OM2MResource {
         return obj;
     }
     
-    @Override
-    public String[] getCopyParameters() {
-        return new String[] { getResourceName() };
-    }
-    
 }

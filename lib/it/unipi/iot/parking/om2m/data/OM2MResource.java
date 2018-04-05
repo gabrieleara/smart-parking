@@ -125,11 +125,6 @@ public class OM2MResource implements Comparable<OM2MResource> {
         return true;
     }
     
-    // TODO: change copy options to something better
-    public String[] getCopyParameters() {
-        return new String[0];
-    }
-    
     public static Object fromEnclosedJSONObject(JSONObject obj) throws OM2MException {
         final int[] tests = { OM2MConstants.RESOURCE_TYPE_APPLICATION_ENTITY,
                 OM2MConstants.RESOURCE_TYPE_CONTAINER, OM2MConstants.RESOURCE_TYPE_CONTENT_INSTANCE,

@@ -152,6 +152,9 @@ public class ParksDataHandler {
         
         parkStatus = ((ContentInstance) OM2M_NODE.get(uril[0] + "/la")).getContentValue();
         
+        parkStatus.put("id", parkID);
+        parkStatus.put("available", true); // TODO: implement it
+        
         // Get list of spots and add each one to a JSONArray
         spots = new JSONArray();
         
@@ -162,8 +165,10 @@ public class ParksDataHandler {
         uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
         
         for (String uri : uril) {
+            String spotID = getResourceIDFromPath(uri);
             ContentInstance value = (ContentInstance) OM2M_NODE.get(uri + "/la");
             JSONObject spotStatus = value.getContentValue();
+            spotStatus.put("id",spotID);
             spots.put(spotStatus);
         }
         

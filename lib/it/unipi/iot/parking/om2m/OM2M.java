@@ -265,11 +265,11 @@ public class OM2M {
      * @throws OM2MException
      * 
      */
-    public OM2MResource createCopy(final String parentID, final OM2MResource original)
+    /*public OM2MResource createCopy(final String parentID, final OM2MResource original)
             throws TimeoutException, OM2MException {
         return createCopy(parentID, original, new String[] {});
-    }
-    
+    }*/
+    /*
     public OM2MResource createCopy(final String parentID, final OM2MResource original,
             final String[] labels) throws TimeoutException, OM2MException {
         final String[] copyParameters = original.getCopyParameters();
@@ -280,7 +280,7 @@ public class OM2M {
         
         return create(parentID, original.getResourceType(), parameters);
     }
-    
+    */
     /**
      * Performs a remote request for the resource identified by the given ID.
      * 
