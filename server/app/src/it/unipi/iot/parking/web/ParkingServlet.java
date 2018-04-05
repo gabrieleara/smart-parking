@@ -3,10 +3,16 @@ package it.unipi.iot.parking.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,21 +22,59 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.ParksDataHandler;
-import it.unipi.iot.parking.om2m.data.RemoteNode;
 import it.unipi.iot.parking.om2m.subscriber.DuplicatorThread;
-import it.unipi.iot.parking.om2m.subscriber.NodeSubscriber;
 import it.unipi.iot.parking.om2m.subscriber.SubscriptionServer;
+import it.unipi.iot.parking.util.SimpleMultiMap;
 
 /**
  * Servlet implementation class BackgroundServlet
  */
-@WebServlet(name = "parks-servlet", urlPatterns = { "/servlets/parks" }, loadOnStartup = 1)
+@WebServlet(name = "parks-servlet", urlPatterns = {
+        "/servlets/parks" }, loadOnStartup = 1, asyncSupported = true)
 public class ParkingServlet extends HttpServlet {
     // Used for the Serialization, let us just leave it here
     private static final long serialVersionUID = 1L;
     
     private SubscriptionServer server  = null;
     private DuplicatorThread   dthread = null;
+    // private SSEventHandler sseHandler = null;
+    
+    private final Object                               STREAMS_MONITOR   = new Object();
+    private final Set<AsyncContext>                    waitingStreams    = new HashSet<>();
+    private final SimpleMultiMap<String, AsyncContext> parkStreams       = new SimpleMultiMap<>();
+    private final ParkEventListener                    parkEventListener = new ParkEventListener();
+    
+    private class ParkEventListener implements AsyncListener {
+        private void removeContext(AsyncContext context) {
+            synchronized (STREAMS_MONITOR) {
+                /* boolean changed = */
+                parkStreams.removeAll(context);
+                
+                /* if (!changed) */
+                waitingStreams.remove(context);
+            }
+        }
+        
+        @Override
+        public void onComplete(AsyncEvent event) throws IOException {
+            removeContext(event.getAsyncContext());
+        }
+        
+        @Override
+        public void onError(AsyncEvent event) throws IOException {
+            removeContext(event.getAsyncContext());
+        }
+        
+        @Override
+        public void onStartAsync(AsyncEvent event) throws IOException {
+            // TODO: do nothing?
+        }
+        
+        @Override
+        public void onTimeout(AsyncEvent event) throws IOException {
+            removeContext(event.getAsyncContext());
+        }
+    }
     
     /**
      * @see Servlet#init()“
@@ -48,35 +92,13 @@ public class ParkingServlet extends HttpServlet {
         server.start();
         dthread.start();
         
-        // Following line is used to invalidate code and simulate a reboot of the system
-        // when in debug mode, modify that line so that the code needs to be rebooted
-        System.out.println("Prova");
-        
-        NodeSubscriber nodeSubscriber = new NodeSubscriber(server, "in-subscriber");
-        
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
         
-        // DELETE ALL PREVIOUS SUBSCRIPTIONS
-        try {
-            ParksDataHandler.deleteAllSubscriptions("parking");
-            
-            ParksDataHandler.subscribe("parking", nodeSubscriber.getFullURI());
-            
-            String[] uril = ParksDataHandler.getAllRemoteNodes();
-            
-            for (String uri : uril) {
-                RemoteNode rcse = (RemoteNode) ParksDataHandler.get(uri);
-                
-                nodeSubscriber.subscribeToNode(rcse);
-            }
-            
-        } catch (TimeoutException e) {
-            throw new RuntimeException("IN node is not responding to requests!");
-        }
-        
+        InitializeSubscriptorThread t = new InitializeSubscriptorThread(server);
+        t.start();
     }
     
-    private class Bounds {
+    private static class Bounds {
         final double minLatitude, minLongitude, maxLatitude, maxLongitude;
         
         public Bounds(double minLatitude, double minLongitude, double maxLatitude,
@@ -111,13 +133,22 @@ public class ParkingServlet extends HttpServlet {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        final PrintWriter writer;
-        final JSONObject responseObj;
-        final String[] parks;
-        final List<JSONObject> parkList;
-        final JSONArray parksArray;
+        
         final Bounds bounds;
         double minLat, minLon, maxLat, maxLon;
+        
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
+        
+        // writer = response.getWriter();
+        final AsyncContext enquiring;
+        
+        synchronized (STREAMS_MONITOR) {
+            enquiring = request.startAsync();
+            enquiring.setTimeout(60 * 1000);
+            enquiring.addListener(parkEventListener);
+            waitingStreams.add(enquiring);
+        }
         
         try {
             minLat = Double.parseDouble(request.getParameter("minLat"));
@@ -142,41 +173,98 @@ public class ParkingServlet extends HttpServlet {
         
         bounds = new Bounds(minLat, minLon, maxLat, maxLon);
         
-        // TODO: switch to application/javascript in deploy
-        //response.setContentType("application/javascript");
-        response.setContentType("text/json");
-        writer = response.getWriter();
-        responseObj = new JSONObject();
-        
-        try {
-            parks = ParksDataHandler.getAllParksList();
+        Runnable query = new Runnable() {
+            JSONObject       responseObj;
+            String[]         parks;
+            List<JSONObject> parkList;
+            JSONArray        parksArray;
             
-            parkList = new ArrayList<>();
-            
-            for (String park : parks) {
-                JSONObject parkData = ParksDataHandler.getParkData(park);
+            @Override
+            public void run() {
+                responseObj = new JSONObject();
                 
-                if (!bounds.acceptPark(parkData))
-                    continue;
+                try {
+                    parks = ParksDataHandler.getAllParksList();
+                    
+                    parkList = new ArrayList<>();
+                    
+                    for (String park : parks) {
+                        JSONObject parkData = ParksDataHandler.getParkData(park);
+                        
+                        if (!bounds.acceptPark(parkData))
+                            continue;
+                        
+                        parkList.add(parkData);
+                    }
+                    
+                    parksArray = new JSONArray(parkList);
+                    responseObj.put("parks", parksArray);
+                    
+                    synchronized (STREAMS_MONITOR) {
+                        // Move the enquiring from the set to the map (multiple copies) and notify
+                        // him
+                        waitingStreams.remove(enquiring);
+                        
+                        for (JSONObject parkData : parkList) {
+                            parkStreams.put(parkData.getString("id"), enquiring);
+                        }
+                    }
+                    
+                    // TODO: if it doesn't go well, remove the park
+                    writeToStream(enquiring, responseObj.toString());
+                    
+                } catch (TimeoutException e) { // What to do if IN is unavailable?
+                    throw new RuntimeException("IN node unreachable! "
+                            + "Contact system administrator as soon as possible!", e);
+                }
                 
-                parkList.add(parkData);
             }
             
-            parksArray = new JSONArray(parkList);
-            
-            responseObj.put("parks", parksArray);
-            
-            writer.append(responseObj.toString(2));
-            /*
-             * response.getWriter() .append("Served at: ")
-             * .append(request.getContextPath());
-             */
-        } catch (TimeoutException e) {
-            // What to do if IN is unavailable?
-            throw new RuntimeException(
-                    "IN node unreachable! Contact system administrator as soon as possible!", e);
-        }
+        };
         
+        new Thread(query).start();
+        
+        /*
+         * try { parks = ParksDataHandler.getAllParksList();
+         * 
+         * parkList = new ArrayList<>();
+         * 
+         * for (String park : parks) { JSONObject parkData =
+         * ParksDataHandler.getParkData(park);
+         * 
+         * if (!bounds.acceptPark(parkData)) continue;
+         * 
+         * parkList.add(parkData); }
+         * 
+         * parksArray = new JSONArray(parkList);
+         * 
+         * responseObj.put("parks", parksArray);
+         * 
+         * //writer.append(responseObj.toString(2));
+         * 
+         * } catch (TimeoutException e) { // What to do if IN is unavailable? throw new
+         * RuntimeException(
+         * "IN node unreachable! Contact system administrator as soon as possible!", e);
+         * }
+         */
+    }
+    
+    private boolean writeToStream(AsyncContext context, String content) {
+        final ServletResponse response = context.getResponse();
+        final PrintWriter out;
+        
+        try {
+            out = response.getWriter();
+            out.write(content);
+            if (out.checkError()) { // checkError calls flush, and flush() does not
+                                    // throw IOException
+                return false;
+            }
+            
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
     }
     
     /**
@@ -195,6 +283,7 @@ public class ParkingServlet extends HttpServlet {
         
         server.stop();
         dthread.interrupt();
+        // Destroy the sseHandler
         
         try {
             dthread.join();
@@ -204,6 +293,7 @@ public class ParkingServlet extends HttpServlet {
         }
         
         dthread = null;
+        // TODO: empty the streams list
         
         // TODO: check if this is needed (shouldn't be)
         // server.destroy();
