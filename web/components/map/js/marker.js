@@ -52,50 +52,50 @@ class Marker {
     }
 
     // Create a new marker on the map
-    createParkMarker(location, id, clickCallback) {
+    createParkMarker(location, i, clickCallback) {
         var newMarker = new google.maps.Marker({
-            id: id,
-            position: location,
+            id: location.id,
+            position: location.coord,
             icon: "components/map/img/marker.svg",
             map: this.map
         });
         newMarker.addListener('click', function (id) {
             return function() { clickCallback(id) }
-        }(id));
+        }(i));
         this.markers.push(newMarker);
     }
 
     // Create a new set of markers
-    createParkMarkers(locations, ids, clickCallback) {
+    createParkMarkers(locations, clickCallback) {
         for(var i = 0; i < locations.length; i++)
-            this.createParkMarker(locations[i], ids[i], clickCallback);
+            this.createParkMarker(locations[i], clickCallback);
     }
 
     // Update a set of markers
-    updateParkMarkers(locations, ids, clickCallback) {
+    updateParkMarkers(locations, clickCallback) {
 
-        // Check for new markers and draw it
+        // check for new markers and draw it
         for(var i = 0; i < locations.length; i++) {
             var alreadyIn = false;
 
             for(var j = 0; j < this.markers.length && !alreadyIn; j++)         
-                if(ids[i] == this.markers[j].id)
+                if(locations[i].id == this.markers[j].id)
                     alreadyIn = true;
 
             if(!alreadyIn)
-                this.createParkMarker(locations[i], ids[i], clickCallback);
+                this.createParkMarker(locations[i], i, clickCallback);
         }
 
-        // Check for deleted markers and hide it
+        // check for deleted markers and hide it
         for(var i = 0; i < this.markers.length; i++) {
             var noMoreIn = true;
 
             for(var j = 0; j < locations.length && noMoreIn; j++)         
-                if(this.markers[i].id == ids[j])
+                if(this.markers[i].id == locations[j].id)
                     noMoreIn = false;
 
             if(noMoreIn)
-                this.resetMarker(ids[i]);
+                this.resetMarker(locations[i].id);
         }
     }
 
@@ -104,7 +104,7 @@ class Marker {
         var newSpot = new google.maps.Marker({
             id: spotlocation.id,
             zIndex: 99,
-            position: spotlocation.loc,
+            position: spotlocation.coord,
             icon: spotlocation.free ? "components/map/img/pin-green.svg" 
                                     : "components/map/img/pin-red.svg",
             map: this.map
@@ -114,7 +114,7 @@ class Marker {
 
     // Add spot markers to the locations provided
     createSpotMarkers(spotlocations) {
-        for(var i = 0; i < locations.length; i++)
+        for(var i = 0; i < spotlocations.length; i++)
             this.createSpotMarker(spotlocations[i]);
     }
 

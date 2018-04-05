@@ -53,8 +53,8 @@ class MyMap {
     }
 
     // Add markers to map
-    mapAddMarkers(locations, ids, clickCallback) {
-        this.marker.updateParkMarkers(locations, ids, clickCallback)
+    mapAddMarkers(locations, clickCallback) {
+        this.marker.updateParkMarkers(locations, clickCallback)
     }
 
     // Reset map markers
@@ -68,6 +68,16 @@ class MyMap {
 
     mapResetSpot() {
         this.marker.removeSpotMarkers();
+    }
+
+    // Return map bounds
+    getBounds() {
+        return {
+            minLat : this.map.getBounds().getNorthEast().lat(),
+            minLon : this.map.getBounds().getNorthEast().lng(),
+            maxLat : this.map.getBounds().getSouthWest().lat(),
+            maxLon : this.map.getBounds().getSouthWest().lng(),
+        }
     }
 
     // -----------------------------------------

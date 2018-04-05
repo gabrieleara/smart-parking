@@ -5,7 +5,7 @@
 
 var map;
 var sidebar;
-var source; 
+var request; 
 
 $(document).ready(function(){
     createMap();
@@ -30,7 +30,6 @@ function createSidebar() {
 function createMap() {
     map = new MyMap();
     map.bindAutocomplete('place-input');
-    map.addChangeBoundListener(forceRefresh);
 }
 
 // Search on map using the form in coverboard
@@ -39,6 +38,7 @@ function searchOnMap() {
         return;
 
     map.unbindAutocomplete();
+    map.addChangeBoundListener(makeRequest);
     showMapHideCover();
 }
 
@@ -47,52 +47,34 @@ function searchOnMap() {
 // ---------------------
 
 function createRequestHandler() {
-    // CREA RICHIESTA PER IL SERVER SSE/WEBSOCKET
-    console.log("Apro connession con server..");
+    request = new Request();
 }
 
-function forceRefresh() {
-    // FORZA IL SERVER A COMUNICARE DATI
-    console.log("Il server verrà interrogato..");
-
-    // SIMULO INTERROGAZIONE SERVER
-    var locations = requestParkLocations(); 
-    var spots = requestSpotLocations();
-    var infos = requestParkInfo();
-    var ids = requestParkID();
-
-    var data = {
-        locations: locations,
-        spots: spots,
-        infos: infos,
-        ids: ids
-    };
-
-    // AGGIORNO L'APP CON I DATI
-    manageUpdate(data);
+function makeRequest() {
+    request.cancelSubscription();
+    request.makeRequest(map.getBounds());
+    manageUpdate();
+    // request.makeSubscription(manageUpdate)
 }
 
 // Manage receive information from server
-function manageUpdate(data) {
+function manageUpdate() {
+    
+    // parse up-to-date info coming from server
+    var parksInfo = request.getParksInfo();
 
-    sidebar.buildItemsList(data.infos, open);
-    sidebar.buildDetailsList(data.infos, close);
+    sidebar.buildItemsList(parksInfo, open);
+    sidebar.buildDetailsList(parksInfo, close);
 
     switch(sidebar.getState()) {
         case STATE.EMPTY:
-            sidebar.appendItemsList();
-            map.mapAddMarkers(data.locations, data.ids, open);
+            updateParks();
             break;
         case STATE.LIST:
-            sidebar.appendItemsList();
-            map.mapAddMarkers(data.locations, data.ids, open);
+            updateParks();
             break;
         case STATE.DETAILS:
-            var parkId = sidebar.getDisplayedId();
-            var listIndex = sidebar.idToListIndex(parkId);
-            sidebar.appendDetailsList(listIndex);
-            map.mapAddMarkers(data.locations, data.ids, open);
-            map.mapAddSpot(data.spots);
+            updateSpots();
             break;
         default:
             console.log("Something bad happen. Please contact webmaster.");
@@ -100,17 +82,37 @@ function manageUpdate(data) {
 
 }
 
+function updateParks() {
+    var parksLoc = request.getParksLocations();
+
+    sidebar.appendItemsList();
+    map.mapAddMarkers(parksLoc, open);
+}
+
+function updateSpots() {
+    var parkId = sidebar.getDisplayedId();
+    var listIndex = sidebar.idToListIndex(parkId);
+    var parksLoc = request.getParksLocations();
+    var spotsLoc = request.getSpotsLocations(parkId);
+
+    sidebar.appendDetailsList(listIndex);
+    map.mapAddMarkers(parksLoc, open);
+    map.mapAddSpot(spotsLoc);
+}
+
 function open(id) {
     sidebar.appendDetailsList(id);
-    var spots = requestSpotLocations();
-    map.mapAddSpot(spots);
+    
+    var parkId = sidebar.getDisplayedId();
+    var spotsLoc = request.getSpotsLocations(parkId);
+
+    map.mapAddSpot(spotsLoc);
 }
 
 function close(id) {
     sidebar.appendItemsList();
     map.mapResetSpot();
 }
-
 
 // ------------------
 // GRAPHICAL UTILITY

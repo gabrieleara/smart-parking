@@ -99,14 +99,14 @@ class Sidebar {
     }
 
     // Reset items list and build them with new values
-    buildItemsList(elements, openCallback) {
-        for(var i = 0; i < elements.length; i++) {
+    buildItemsList(parkInfo, openCallback) {
+        for(var i = 0; i < parkInfo.length; i++) {
             this.copyTemplateToItemList(i);
-            SidebarDrawer.setItemId(this.listItems[i], elements[i].id);
-            SidebarDrawer.setItemTitle(this.listItems[i], elements[i].parkname);
-            SidebarDrawer.setItemPrice(this.listItems[i], elements[i].price);
-            SidebarDrawer.setItemSpotNumber(this.listItems[i], elements[i].free, elements[i].total);
-            SidebarDrawer.setItemStatus(this.listItems[i], elements[i].status);
+            SidebarDrawer.setItemId(this.listItems[i], parkInfo[i].id);
+            SidebarDrawer.setItemTitle(this.listItems[i], parkInfo[i].name);
+            SidebarDrawer.setItemPrice(this.listItems[i], parkInfo[i].price);
+            SidebarDrawer.setItemSpotNumber(this.listItems[i], parkInfo[i].free, parkInfo[i].total);
+            SidebarDrawer.setItemStatus(this.listItems[i], parkInfo[i].available);
             SidebarDrawer.setItemOpenAction(this.listItems[i], i, openCallback);
         }
     }
@@ -122,18 +122,18 @@ class Sidebar {
     }
 
     // Reset details list and build them with new values
-    buildDetailsList(elements, closeCallback) {
-        for(var i = 0; i < elements.length; i++) {
+    buildDetailsList(parkInfo, closeCallback) {
+        for(var i = 0; i < parkInfo.length; i++) {
             this.copyTemplateToDetailsList(i);
-            SidebarDrawer.setItemId(this.listDetails[i], elements[i].id);
-            SidebarDrawer.setDetailsTitle(this.listDetails[i], elements[i].parkname);
-            SidebarDrawer.setDetailsPrice(this.listDetails[i], elements[i].price);
-            SidebarDrawer.setDetailsSpotNumber(this.listDetails[i], elements[i].free, elements[i].total);
-            SidebarDrawer.setDetailsDirections(this.listDetails[i], elements[i].link);
-            SidebarDrawer.setDetailsAddress(this.listDetails[i], elements[i].address);
-            SidebarDrawer.setDetailsOpening(this.listDetails[i], elements[i].opening, elements[i].closing)
-            SidebarDrawer.setDetailsStatusText(this.listDetails[i], elements[i].status);
-            SidebarDrawer.setDetailsIcon(this.listDetails[i], elements[i].status);
+            SidebarDrawer.setDetailsId(this.listDetails[i], parkInfo[i].id);
+            SidebarDrawer.setDetailsTitle(this.listDetails[i], parkInfo[i].name);
+            SidebarDrawer.setDetailsPrice(this.listDetails[i], parkInfo[i].price);
+            SidebarDrawer.setDetailsSpotNumber(this.listDetails[i], parkInfo[i].free, parkInfo[i].total);
+            SidebarDrawer.setDetailsDirections(this.listDetails[i], parkInfo[i].link);
+            SidebarDrawer.setDetailsAddress(this.listDetails[i], parkInfo[i].address);
+            SidebarDrawer.setDetailsOpening(this.listDetails[i], parkInfo[i].openT, parkInfo[i].closeT)
+            SidebarDrawer.setDetailsStatusText(this.listDetails[i], parkInfo[i].available);
+            SidebarDrawer.setDetailsIcon(this.listDetails[i], parkInfo[i].available);
             SidebarDrawer.setDetailsCloseAction(this.listDetails[i], i, closeCallback);
         }
     }
