@@ -18,7 +18,7 @@ const STATE = Object.freeze({
 });
 
 // Server endpoint
-const SUB_RES = "servlets/update";
+const SUB_RES = "servlets/parks";
 const PARK_RES = "servlets/parks";
 const LOGIN_RES = "servlets/login";
 const SIGNUP_RES = "servlets/signup";

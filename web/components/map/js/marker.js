@@ -52,7 +52,7 @@ class Marker {
     }
 
     // Create a new marker on the map
-    createParkMarker(location, i, clickCallback) {
+    createParkMarker(location, clickCallback) {
         var newMarker = new google.maps.Marker({
             id: location.id,
             position: location.coord,
@@ -61,7 +61,7 @@ class Marker {
         });
         newMarker.addListener('click', function (id) {
             return function() { clickCallback(id) }
-        }(i));
+        }(location.id));
         this.markers.push(newMarker);
     }
 
@@ -83,7 +83,7 @@ class Marker {
                     alreadyIn = true;
 
             if(!alreadyIn)
-                this.createParkMarker(locations[i], i, clickCallback);
+                this.createParkMarker(locations[i], clickCallback);
         }
 
         // check for deleted markers and hide it
@@ -95,7 +95,7 @@ class Marker {
                     noMoreIn = false;
 
             if(noMoreIn)
-                this.resetMarker(locations[i].id);
+                this.resetMarker(this.markers[i].id);
         }
     }
 
@@ -140,7 +140,7 @@ class Marker {
                     noMoreIn = false;
 
             if(noMoreIn)
-                this.resetMarker(spotlocations[i]);
+                this.resetMarker(this.spots[i].id);
         }
     }
 

@@ -37,8 +37,8 @@ function searchOnMap() {
     if (!map.update())
         return;
 
+    map.addIdleListener(makeRequest);
     map.unbindAutocomplete();
-    map.addChangeBoundListener(makeRequest);
     showMapHideCover();
 }
 
@@ -51,11 +51,14 @@ function createRequestHandler() {
 }
 
 function makeRequest() {
+    console.log("Richiesta inviata.");
     request.cancelSubscription();
-    request.makeRequest(map.getBounds());
-    manageUpdate();
-    // request.makeSubscription(manageUpdate)
+    request.makeSubscription(map.getBounds(), manageUpdate);
 }
+
+// -----------------------------
+// GRAPHICAL UTILITY & MAIN LOOP
+// -----------------------------
 
 // Manage receive information from server
 function manageUpdate() {
@@ -82,6 +85,7 @@ function manageUpdate() {
 
 }
 
+// Get parks location and refresh sidebar/map according to
 function updateParks() {
     var parksLoc = request.getParksLocations();
 
@@ -89,6 +93,7 @@ function updateParks() {
     map.mapAddMarkers(parksLoc, open);
 }
 
+// Get spot location and refresh sidebar/map according to
 function updateSpots() {
     var parkId = sidebar.getDisplayedId();
     var listIndex = sidebar.idToListIndex(parkId);
@@ -100,23 +105,21 @@ function updateSpots() {
     map.mapAddSpot(spotsLoc);
 }
 
-function open(id) {
-    sidebar.appendDetailsList(id);
-    
-    var parkId = sidebar.getDisplayedId();
-    var spotsLoc = request.getSpotsLocations(parkId);
-
-    map.mapAddSpot(spotsLoc);
-}
-
-function close(id) {
+// Hide park details and remove spot marker from map
+function close() {
     sidebar.appendItemsList();
     map.mapResetSpot();
 }
 
-// ------------------
-// GRAPHICAL UTILITY
-// ------------------
+// Show park details and add spot marker to map
+function open(id) {
+    var listIndex = sidebar.idToListIndex(id);
+    var spotsLoc = request.getSpotsLocations(id);
+
+    close();
+    sidebar.appendDetailsList(listIndex);
+    map.mapAddSpot(spotsLoc);
+}
 
 // Show the map and hide main coverboard
 function showMapHideCover() {

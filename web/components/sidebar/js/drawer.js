@@ -85,8 +85,8 @@ class SidebarDrawer {
     }
 
     // Set a callback function for the open action of details item
-    static setItemOpenAction(item, listIndex, callback) {
-        this.setOnClickEvent(item, '.location-container-link', callback, listIndex);
+    static setItemOpenAction(item, id, callback) {
+        this.setOnClickEvent(item, '.location-container-link', callback, id);
     }
 
     // -----------------------------------------
@@ -170,8 +170,8 @@ class SidebarDrawer {
     }
 
     // Set a callback function for the close icon of details item
-    static setDetailsCloseAction(item, listIndex, callback) {
-        this.setOnClickEvent(item, '.location-details-close', callback, listIndex);
+    static setDetailsCloseAction(item, callback) {
+        this.setOnClickEvent(item, '.location-details-close', callback);
     }
 
     // -----------------------------------------

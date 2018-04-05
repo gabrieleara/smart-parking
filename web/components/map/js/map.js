@@ -48,8 +48,8 @@ class MyMap {
     }
 
     // Set bounds_changed listener
-    addChangeBoundListener(callback) {
-        this.map.addListener('bounds_changed', callback);
+    addIdleListener(callback) {
+        this.map.addListener('idle', callback);
     }
 
     // Add markers to map
@@ -73,10 +73,10 @@ class MyMap {
     // Return map bounds
     getBounds() {
         return {
-            minLat : this.map.getBounds().getNorthEast().lat(),
-            minLon : this.map.getBounds().getNorthEast().lng(),
-            maxLat : this.map.getBounds().getSouthWest().lat(),
-            maxLon : this.map.getBounds().getSouthWest().lng(),
+            minLat : this.map.getBounds().getSouthWest().lat(),
+            minLon : this.map.getBounds().getSouthWest().lng(),
+            maxLat : this.map.getBounds().getNorthEast().lat(),
+            maxLon : this.map.getBounds().getNorthEast().lng(),
         }
     }
 

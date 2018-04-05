@@ -34,6 +34,7 @@ class Sidebar {
         this.importDetailsTemplate();
 
         // by default append the empty template
+        this.buildEmptyList();
         this.appendEmptyList();
         this.sidebarState = STATE.EMPTY;
     }
@@ -93,6 +94,7 @@ class Sidebar {
             SidebarDrawer.cleanAddItemList(this.listItems);
             this.sidebarState = STATE.LIST;
         } else {
+            this.buildEmptyList();
             SidebarDrawer.cleanAddEmptyList(this.listEmpty);
             this.sidebarState = STATE.EMPTY;
         }
@@ -100,6 +102,8 @@ class Sidebar {
 
     // Reset items list and build them with new values
     buildItemsList(parkInfo, openCallback) {
+        this.deleteItemList();
+
         for(var i = 0; i < parkInfo.length; i++) {
             this.copyTemplateToItemList(i);
             SidebarDrawer.setItemId(this.listItems[i], parkInfo[i].id);
@@ -107,7 +111,7 @@ class Sidebar {
             SidebarDrawer.setItemPrice(this.listItems[i], parkInfo[i].price);
             SidebarDrawer.setItemSpotNumber(this.listItems[i], parkInfo[i].free, parkInfo[i].total);
             SidebarDrawer.setItemStatus(this.listItems[i], parkInfo[i].available);
-            SidebarDrawer.setItemOpenAction(this.listItems[i], i, openCallback);
+            SidebarDrawer.setItemOpenAction(this.listItems[i], parkInfo[i].id, openCallback);
         }
     }
 
@@ -123,6 +127,8 @@ class Sidebar {
 
     // Reset details list and build them with new values
     buildDetailsList(parkInfo, closeCallback) {
+        this.deleteDetailsList();
+
         for(var i = 0; i < parkInfo.length; i++) {
             this.copyTemplateToDetailsList(i);
             SidebarDrawer.setDetailsId(this.listDetails[i], parkInfo[i].id);
@@ -134,7 +140,7 @@ class Sidebar {
             SidebarDrawer.setDetailsOpening(this.listDetails[i], parkInfo[i].openT, parkInfo[i].closeT)
             SidebarDrawer.setDetailsStatusText(this.listDetails[i], parkInfo[i].available);
             SidebarDrawer.setDetailsIcon(this.listDetails[i], parkInfo[i].available);
-            SidebarDrawer.setDetailsCloseAction(this.listDetails[i], i, closeCallback);
+            SidebarDrawer.setDetailsCloseAction(this.listDetails[i], closeCallback);
         }
     }
         
@@ -190,5 +196,20 @@ class Sidebar {
     copyTemplateToDetailsList(listIndex) {
         this.listDetails[listIndex] = this.templateDetails.cloneNode(true);
     }
+
+    // ----------------------------------------
+    // DELETE CURRENT LIST
+    // ----------------------------------------
+
+    // Delete current item list
+    deleteItemList() {
+        this.listItems = [];
+    }
+
+    // Delete current details list
+    deleteDetailsList() {
+        this.listDetails = [];
+    }
+
 }
 
