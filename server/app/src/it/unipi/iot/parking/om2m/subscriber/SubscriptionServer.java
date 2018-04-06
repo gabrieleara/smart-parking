@@ -30,7 +30,6 @@ public class SubscriptionServer extends CoapServer implements FullURIResource {
      */
     private final String serverURI;
     
-    // TODO: change to package
     public SubscriptionServer(int port) {
         super(port);
         serverURI = "coap://" + IPAddress + ":" + port;

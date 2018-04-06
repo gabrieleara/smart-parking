@@ -8,15 +8,20 @@ import org.json.JSONObject;
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 import it.unipi.iot.parking.om2m.data.RemoteNode;
+import it.unipi.iot.parking.util.OM2MObservable;
 
 public class NodeSubscriber extends ResourceSubscriber {
     
-    public NodeSubscriber(ResourceSubscriber parentResource, String name) {
+    private final OM2MObservable.Observer observer;
+    
+    public NodeSubscriber(ResourceSubscriber parentResource, String name, OM2MObservable.Observer observer) {
         super(parentResource, name);
+        this.observer = observer;
     }
     
-    public NodeSubscriber(SubscriptionServer server, String name) {
+    public NodeSubscriber(SubscriptionServer server, String name, OM2MObservable.Observer observer) {
         super(server, name);
+        this.observer = observer;
     }
     
     @Override
@@ -53,6 +58,8 @@ public class NodeSubscriber extends ResourceSubscriber {
         // TODO: check if this behavior is bad or not
         CopyResourceSubscriber csr = new CopyResourceSubscriber(this, resourceID,
                 rcse.getResourceID());
+        
+        csr.registerObserver(observer);
         
         // TODO: move on the CopyResourceSubscriber, because if the node goes down
         // you'll want to re-subscribe to every node

@@ -86,7 +86,7 @@ public class DuplicatorThread extends Thread {
     @Override
     public void run() {
         CopyRequest request;
-        // OM2MResource copy;
+        OM2MResource copy;
         OM2MResource original;
         CopyResourceSubscriber demanding;
         
@@ -97,14 +97,15 @@ public class DuplicatorThread extends Thread {
                 demanding = request.demanding;
                 
                 try {
-                    // copy =
-                    ParksDataHandler.createCopy(original, demanding.getBaseCopyURI());
+                    copy = ParksDataHandler.createCopy(original, demanding.getBaseCopyURI());
                 } catch (OM2MException e) {
                     if (e.getCode() == ErrorCode.NAME_ALREADY_PRESENT) {
                         // Keep going, it's all fine and it is an intended behavior
+                        // TODO: switch to a logger
                         System.out.println("Don't worry, OM2MException caught properly!");
                         // If needed, implement this
                         // copy = ParksDataHandler.get();
+                        continue;
                     } else {
                         // Something bad happened!
                         throw e;
@@ -121,7 +122,7 @@ public class DuplicatorThread extends Thread {
                 if (this.isInterrupted())
                     break;
                 
-                demanding.postProcess(original);
+                demanding.postProcess(original, copy);
             }
         } catch (InterruptedException ex) {
             // Thread terminates, as requested, even if there is still stuff in the queue!

@@ -32,6 +32,7 @@ class Request {
 
 		this.source = new EventSource(requiredRes);
 		this.source.onmessage = function(event) {
+			console.log(this.event);
 			this.reply = JSON.parse(event.data);
 			console.log(this.reply);
 			callback(); 

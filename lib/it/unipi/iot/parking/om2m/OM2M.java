@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.californium.core.CoapClient;
@@ -41,6 +42,11 @@ public class OM2M {
      * Standard logger object.
      */
     private static final Logger LOGGER = Logger.getLogger(OM2M.class.getName());
+    
+    static { 
+        LOGGER.setLevel(Level.OFF);
+    }
+
     
     /*
      * -----------------------------------------------------------------------------

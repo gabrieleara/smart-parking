@@ -10,9 +10,12 @@ import org.json.JSONObject;
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.om2m.OM2MConstants;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
+import it.unipi.iot.parking.util.ConcurrentOM2MObservable;
+import it.unipi.iot.parking.util.OM2MObservable;
 
-public class CopyResourceSubscriber extends ResourceSubscriber {
+public class CopyResourceSubscriber extends ResourceSubscriber implements OM2MObservable {
     private final String baseCopyURI;
+    private final ConcurrentOM2MObservable observable = new ConcurrentOM2MObservable();
     
     // FIXME:
     // Si assume che non arrivino richieste di cambio di stato eccessivamente rapide
@@ -64,9 +67,8 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
         
     }
     
-    protected void postProcess(OM2MResource resource) {
-        // TODO: in the future, notify someone that something has changed, maybe
-        // requiring an optional copy parameter with the newly created resource
+    protected void postProcess(OM2MResource resource, OM2MResource copy) {
+        observable.notifyObservers(copy);
         
         if (OM2MResource.shouldBeSubscribed(resource))
             addSubscription(resource.getResourceID());
@@ -142,5 +144,15 @@ public class CopyResourceSubscriber extends ResourceSubscriber {
     
     public String getBaseCopyURI() {
         return this.baseCopyURI;
+    }
+
+    @Override
+    public void registerObserver(Observer observer) {
+        observable.registerObserver(observer);
+    }
+
+    @Override
+    public boolean unregisterObserver(Observer observer) {
+        return observable.unregisterObserver(observer);
     }
 }

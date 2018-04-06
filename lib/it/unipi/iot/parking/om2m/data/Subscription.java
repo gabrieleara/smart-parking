@@ -29,9 +29,8 @@ public class Subscription extends OM2MResource {
     }
     
     public JSONObject toJSONObject() {
-        JSONObject obj = new JSONObject();
+        JSONObject obj = super.toJSONObject();
         
-        // TODO: other attributes if necessary
         obj.put(OM2MConstants.ATTR_NOTIFICATION_URI, notificationURIs);
         
         return obj;

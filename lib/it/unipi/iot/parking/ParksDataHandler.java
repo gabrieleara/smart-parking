@@ -3,6 +3,7 @@ package it.unipi.iot.parking;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.json.JSONArray;
@@ -24,6 +25,10 @@ public class ParksDataHandler {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ParksDataHandler.class.getName());
     
+    static { 
+        LOGGER.setLevel(Level.OFF);
+    }
+    
     private static final String      CONTAINER_BASE_NAME = "park-";
     private static final OM2MSession SESSION_DATA;
     private static final OM2M        OM2M_NODE;
@@ -44,7 +49,7 @@ public class ParksDataHandler {
         parentID = getResourceIDFromPath(AppConfig.CSE_ID);
         
         labels = new LabelsFactory().setParentID(parentID)
-                                    .setResourceName(conf.name) // TODO: probably unused
+                                    .setResourceName(conf.name)
                                     .setType("park")
                                     .getLabels();
         
@@ -69,7 +74,7 @@ public class ParksDataHandler {
         containerName = assignSpotName(index);
         
         factory = new LabelsFactory().setParentID(parentID)
-                                     .setResourceName(containerName) // TODO: probably unused
+                                     .setResourceName(containerName)
                                      .setSpotName(containerName)
                                      .setParkID(parentID);
         
@@ -135,6 +140,7 @@ public class ParksDataHandler {
         return parkIDs;
     }
     
+    // TODO: add more data here if necessary
     public static JSONObject getParkData(String parkID) throws OM2MException, TimeoutException {
         String[] filters;
         String[] uril;
@@ -177,7 +183,6 @@ public class ParksDataHandler {
         return parkStatus;
     }
     
-    // TODO: add more data here if necessary
     public static JSONObject getParkDataFromURI(String parkPath)
             throws OM2MException, TimeoutException {
         final String parkID;

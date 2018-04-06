@@ -20,7 +20,6 @@ public class RemoteNode extends OM2MResource {
     
     @Override
     public JSONObject toJSONObject() {
-        // TODO Auto-generated method stub
         JSONObject obj = super.toJSONObject();
         
         obj.put(OM2MConstants.ATTR_CSE_ID, cseID);

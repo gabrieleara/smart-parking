@@ -20,6 +20,10 @@ public abstract class ResourceSubscriber extends CoapResource implements FullURI
     
     private static final Logger LOGGER = Logger.getLogger(ResourceSubscriber.class.getName());
     
+    static { 
+        LOGGER.setLevel(Level.OFF);
+    }
+    
     private final FullURIResource parent;
     
     public ResourceSubscriber(SubscriptionServer server, String name) {

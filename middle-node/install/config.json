@@ -9,21 +9,73 @@
 	"in_id": "parking",
 	"parks_data": [
 		{
-			"app_id": "parking-api",
-			"name":"parks",
+			"app_id": "lazzarino-api",
+			"name":"lazzarino",
 			"spots": [
 				{
-					"lat": "75",
-					"lon":"80",
-					"name": "",
-					"address": "",
+					"lat": "43.720660",
+					"lon": "10.389560",
+					"name": "Park Lucio Lazzarino",
+					"address": "Largo Lucio Lazzarino - 56122 Pisa PI",
 					"price": 1.2,
-					"openT": "",
-					"closeT": ""
+					"openT": "08:00",
+					"closeT": "20:00"
 				},
-				{ "lat": "", "lon": "", "free": true, "user": null},
-				{ "lat": "", "lon": "", "free": true, "user": null}
+				{ "lat": "43.7207555", "lon": "10.389442", "free": true, "user": null},
+				{ "lat": "43.720641", "lon": "10.389852", "free": true, "user": null},
+				{ "lat": "43.720708", "lon": "10.389630", "free": true, "user": null}
 			]
+		},
+		{
+			"app_id": "giuntapisano-api",
+			"name":"giuntapisano",
+			"spots": [
+				{
+					"lat": "43.721719",
+					"lon": "10.389705",
+					"name": "Giunta Pisano Parking",
+					"address": "Via Giunta Pisano, 7 - 56122 Pisa PI",
+					"price": 1.8,
+					"openT": "12:00",
+					"closeT": "20:00"
+				},
+				{ "lat": "43.721576", "lon": "10.390161", "free": true, "user": null},
+				{ "lat": "43.721665", "lon": "10.389869", "free": false, "user": 15}
+			]
+		},
+		{
+			"app_id": "galileilivorno-api",
+			"name":"galileilivorno",
+			"spots": [
+				{
+					"address"	: 	"Via Galileo Galilei - Pisa PI 56126",
+					"price"		: 	1.2,
+					"name"		: 	"Park Via Galilei",
+					"closeT"	: 	"24:00",
+					"lon"		: 	"10.325283900000045",
+					"openT"		: 	"12:00",
+					"lat"		: 	"43.53911887290961"
+				},
+				{ 
+						"lon"	: 	"10.325383900000045", 
+						"free"	: 	true, 
+						"user"	: 	null,
+						"lat"	: 	"43.53912887290961"
+					},
+					{ 
+						"lon"	: 	"10.325393900000045", 
+						"free"	: 	true, 
+						"user"	: 	null,
+						"lat"	: 	"43.53912917290961"
+					},
+					{ 
+						"lon"	: 	"10.325413900000045", 
+						"free"	: 	false, 
+						"user"	: 	12,
+						"lat"	: 	"43.53912927290961"
+					}
+				]
+			
 		}
 	]
 }
