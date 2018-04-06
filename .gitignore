@@ -5,3 +5,8 @@ log.out*
 *.db
 framework.info.*
 .fileTable.*
+*.1
+*.2
+*.cfg
+*.db
+*.out
