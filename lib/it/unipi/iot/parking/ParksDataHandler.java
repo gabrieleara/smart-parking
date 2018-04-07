@@ -6,9 +6,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
+import it.unipi.iot.parking.data.ParkStatus;
+import it.unipi.iot.parking.data.SpotStatus;
 import it.unipi.iot.parking.om2m.ErrorCode;
 import it.unipi.iot.parking.om2m.OM2M;
 import it.unipi.iot.parking.om2m.OM2MConstants;
@@ -22,10 +23,9 @@ import it.unipi.iot.parking.om2m.data.Subscription;
 
 // NOTICE: these methods should be synchronized properly!
 public class ParksDataHandler {
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ParksDataHandler.class.getName());
     
-    static { 
+    static {
         LOGGER.setLevel(Level.OFF);
     }
     
@@ -141,11 +141,10 @@ public class ParksDataHandler {
     }
     
     // TODO: add more data here if necessary
-    public static JSONObject getParkData(String parkID) throws OM2MException, TimeoutException {
+    public static ParkStatus getParkStatus(String parkID) throws OM2MException, TimeoutException {
         String[] filters;
         String[] uril;
-        final JSONObject parkStatus;
-        final JSONArray spots;
+        final ParkStatus parkStatus;
         
         filters = new LabelsFactory().setType("manifest")
                                      .setParkID(parkID)
@@ -156,14 +155,12 @@ public class ParksDataHandler {
         if (uril.length > 1 || uril.length < 1)
             throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
         
-        parkStatus = ((ContentInstance) OM2M_NODE.get(uril[0] + "/la")).getContentValue();
+        ContentInstance status = (ContentInstance) OM2M_NODE.get(uril[0] + "/la"); 
         
-        parkStatus.put("id", parkID);
-        parkStatus.put("available", true); // TODO: implement it
+        parkStatus = new ParkStatus(parkID, status.getContentValue());
+        parkStatus.setAvailable(true); // TODO: implement it
         
         // Get list of spots and add each one to a JSONArray
-        spots = new JSONArray();
-        
         filters = new LabelsFactory().setType("spot")
                                      .setParkID(parkID)
                                      .getFilters();
@@ -173,23 +170,20 @@ public class ParksDataHandler {
         for (String uri : uril) {
             String spotID = getResourceIDFromPath(uri);
             ContentInstance value = (ContentInstance) OM2M_NODE.get(uri + "/la");
-            JSONObject spotStatus = value.getContentValue();
-            spotStatus.put("id",spotID);
-            spots.put(spotStatus);
+            SpotStatus spotStatus = new SpotStatus(parkID, spotID, value.getContentValue());
+            parkStatus.addOrReplaceSpot(spotStatus);
         }
-        
-        parkStatus.put("spots", spots);
         
         return parkStatus;
     }
     
-    public static JSONObject getParkDataFromURI(String parkPath)
+    public static ParkStatus getParkDataFromURI(String parkPath)
             throws OM2MException, TimeoutException {
         final String parkID;
         
         parkID = getResourceIDFromPath(parkPath);
         
-        return getParkData(parkID);
+        return getParkStatus(parkID);
     }
     
     public static String[] getAllRemoteNodes() throws OM2MException, TimeoutException {

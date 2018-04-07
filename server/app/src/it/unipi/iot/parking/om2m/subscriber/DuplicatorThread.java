@@ -105,6 +105,12 @@ public class DuplicatorThread extends Thread {
                         System.out.println("Don't worry, OM2MException caught properly!");
                         // If needed, implement this
                         // copy = ParksDataHandler.get();
+                        
+                        if (this.isInterrupted())
+                            break;
+                        
+                        demanding.postProcess(original);
+                        
                         continue;
                     } else {
                         // Something bad happened!

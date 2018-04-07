@@ -31,12 +31,21 @@ class Request {
 		var requiredRes = SUB_RES + this.serialize(mapBound);
 
 		this.source = new EventSource(requiredRes);
+		this.source.addEventListener("newParkList", function(event) {
+				console.log(event);
+				this.reply = JSON.parse(event.data);
+				console.log(this.reply);
+				callback();
+			}.bind(this), false);
+
+		/*
 		this.source.onmessage = function(event) {
-			console.log(this.event);
+			console.log(event);
 			this.reply = JSON.parse(event.data);
 			console.log(this.reply);
 			callback(); 
 		}.bind(this);
+		*/
 	}
 
 	// Cancel server subscription (if any)
