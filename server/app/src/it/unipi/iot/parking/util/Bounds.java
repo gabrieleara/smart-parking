@@ -1,6 +1,6 @@
 package it.unipi.iot.parking.util;
 
-import org.json.JSONObject;
+import it.unipi.iot.parking.data.ParkStatus;
 
 public class Bounds {
     final double minLatitude, minLongitude, maxLatitude, maxLongitude;
@@ -14,12 +14,12 @@ public class Bounds {
         this.maxLongitude = maxLongitude;
     }
     
-    public boolean acceptPark(JSONObject parkDescriptor) {
+    public boolean acceptPark(ParkStatus parkDescriptor) {
         final double latitude;
         final double longitude;
         
-        latitude = parkDescriptor.getDouble("lat");
-        longitude = parkDescriptor.getDouble("lon");
+        latitude = parkDescriptor.getLatitude();
+        longitude = parkDescriptor.getLongitude();
         
         if (latitude < minLatitude || latitude > maxLatitude)
             return false;

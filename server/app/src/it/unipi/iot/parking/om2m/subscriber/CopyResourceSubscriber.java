@@ -70,6 +70,10 @@ public class CopyResourceSubscriber extends ResourceSubscriber implements OM2MOb
     protected void postProcess(OM2MResource resource, OM2MResource copy) {
         observable.notifyObservers(copy);
         
+        postProcess(resource);
+    }
+    
+    protected void postProcess(OM2MResource resource) {
         if (OM2MResource.shouldBeSubscribed(resource))
             addSubscription(resource.getResourceID());
     }

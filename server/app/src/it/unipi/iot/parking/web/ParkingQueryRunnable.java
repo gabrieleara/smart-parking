@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletResponse;
@@ -13,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.ParksDataHandler;
+import it.unipi.iot.parking.data.ParkStatus;
 import it.unipi.iot.parking.util.Bounds;
 
 class GetParksRunnable implements Runnable {
@@ -32,7 +34,8 @@ class GetParksRunnable implements Runnable {
         
         final JSONObject responseObj;
         final String[] parks;
-        final List<JSONObject> parkList;
+        final List<ParkStatus> parkList;
+        final List<JSONObject> parksJSONList;
         final JSONArray parksArray;
         
         try {
@@ -47,7 +50,7 @@ class GetParksRunnable implements Runnable {
             parkList = new ArrayList<>();
             
             for (String park : parks) {
-                JSONObject parkData = ParksDataHandler.getParkData(park);
+                ParkStatus parkData = ParksDataHandler.getParkStatus(park);
                 
                 if (!bounds.acceptPark(parkData))
                     continue;
@@ -58,14 +61,18 @@ class GetParksRunnable implements Runnable {
                     return;
             }
             
-            parksArray = new JSONArray(parkList);
+            parksJSONList = parkList.stream()
+                                    .map(p -> p.toJSONObject())
+                                    .collect(Collectors.toList());
+            
+            parksArray = new JSONArray(parksJSONList);
             responseObj = new JSONObject().put("parks", parksArray);
             
             String[] parkIDs = new String[parkList.size()];
             
             for (int i = 0; i < parkIDs.length; ++i) {
                 parkIDs[i] = parkList.get(i)
-                                     .getString("id");
+                                     .getParkID();
             }
             
             if (!clientHolder.serveClient(client, parkIDs))
