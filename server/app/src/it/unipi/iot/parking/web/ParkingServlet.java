@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import it.unipi.iot.parking.om2m.subscriber.DuplicatorThread;
 import it.unipi.iot.parking.om2m.subscriber.SubscriptionServer;
 import it.unipi.iot.parking.util.Bounds;
+import it.unipi.iot.parking.util.SSEHandler;
 
 /**
  * Servlet implementation class BackgroundServlet
@@ -27,9 +28,8 @@ public class ParkingServlet extends HttpServlet {
     // Used for the Serialization, let us just leave it here
     private static final long serialVersionUID = 1L;
     
-    private SubscriptionServer server  = null;
-    private DuplicatorThread   dthread = null;
-    private ObservingClientsHolder clientHolder = null;
+    private SubscriptionServer     server       = null;
+    private DuplicatorThread       dthread      = null;
     
     private ExecutorService requestsExecutor = new ThreadPoolExecutor(10, 20, 0L,
             TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
@@ -44,15 +44,14 @@ public class ParkingServlet extends HttpServlet {
         if (dthread == null)
             dthread = DuplicatorThread.init();
         
-        if (clientHolder == null)
-            clientHolder = new ObservingClientsHolder();
+        SSEHandler.init();
         
         server.start();
         dthread.start();
         
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
         
-        InitializeSubscriptorThread t = new InitializeSubscriptorThread(server, clientHolder);
+        InitializeSubscriptorThread t = new InitializeSubscriptorThread(server, SSEHandler.getObserver());
         t.start();
     }
     
@@ -81,10 +80,7 @@ public class ParkingServlet extends HttpServlet {
         response.setContentType("text/event-stream");
         response.setCharacterEncoding("UTF-8");
         
-        client = request.startAsync();
-        client.setTimeout(30 * 1000); // TODO: constant
-        clientHolder.addWaitingClient(client);
-        client.addListener(clientHolder.getClientEventListener());
+        client = SSEHandler.createSSEStream(request);
         
         minLat = parseParameterOrDefault(request, "minLat", Double.NEGATIVE_INFINITY);
         minLon = parseParameterOrDefault(request, "minLon", Double.NEGATIVE_INFINITY);
@@ -93,7 +89,7 @@ public class ParkingServlet extends HttpServlet {
         
         bounds = new Bounds(minLat, minLon, maxLat, maxLon);
         
-        GetParksRunnable task = new GetParksRunnable(client, clientHolder, bounds);
+        GetParksRunnable task = new GetParksRunnable(client, bounds);
         requestsExecutor.execute(task);
     }
     

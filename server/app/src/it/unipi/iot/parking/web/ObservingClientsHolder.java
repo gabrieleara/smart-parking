@@ -119,4 +119,8 @@ public class ObservingClientsHolder implements OM2MObservable.Observer {
         // TODO: implement this
         System.out.println("FUNZIONA!");
     }
+    
+    public void reset() {
+        // TODO: implement it
+    }
 }
