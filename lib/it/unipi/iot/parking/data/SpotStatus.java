@@ -14,8 +14,8 @@ public class SpotStatus {
     private final String  parkID;
     private final double  latitude;
     private final double  longitude;
-    private final boolean free;
-    private final String  user;
+    private boolean free;
+    private String  user;
     
     public SpotStatus(String parkID, String id, JSONObject data) {
         this.id = id;
@@ -48,6 +48,16 @@ public class SpotStatus {
     
     public String getUser() {
         return user;
+    }
+    
+    public void setOccupied(String user) {
+        this.free = false;
+        this.user = user;
+    }
+    
+    public void setFree() {
+        this.free = true;
+        this.user = null;
     }
     
     public JSONObject toJSONObject() {

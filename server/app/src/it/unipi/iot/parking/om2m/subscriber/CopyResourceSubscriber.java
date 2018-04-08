@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.om2m.OM2MConstants;
+import it.unipi.iot.parking.om2m.OM2MException;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 import it.unipi.iot.parking.util.ConcurrentOM2MObservable;
 import it.unipi.iot.parking.util.OM2MObservable;
@@ -91,7 +92,12 @@ public class CopyResourceSubscriber extends ResourceSubscriber implements OM2MOb
             final List<OM2MResource> copyList;
             
             try {
-                ParksDataHandler.subscribe(remoteID, getFullURI());
+                try {
+                    ParksDataHandler.subscribe(remoteID, getFullURI());
+                } catch(OM2MException e) {
+                    System.out.println("There has been an error with the subscriptions, but it should all be fine: " + e.getMessage());
+                    return;
+                }
                 
                 children = ParksDataHandler.getDirectChildrenList(remoteID);
                 copyList = new ArrayList<>();

@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import it.unipi.iot.parking.om2m.subscriber.DuplicatorThread;
 import it.unipi.iot.parking.om2m.subscriber.SubscriptionServer;
 import it.unipi.iot.parking.util.Bounds;
-import it.unipi.iot.parking.util.SSEHandler;
 
 /**
  * Servlet implementation class BackgroundServlet

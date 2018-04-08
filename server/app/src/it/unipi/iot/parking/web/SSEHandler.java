@@ -1,8 +1,9 @@
-package it.unipi.iot.parking.util;
+package it.unipi.iot.parking.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.AsyncContext;
@@ -12,10 +13,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.data.ParkStatus;
 import it.unipi.iot.parking.data.SpotStatus;
+import it.unipi.iot.parking.om2m.data.OM2MResource;
+import it.unipi.iot.parking.util.OM2MObservable;
 import it.unipi.iot.parking.util.OM2MObservable.Observer;
-import it.unipi.iot.parking.web.ObservingClientsHolder;
 
 public class SSEHandler {
     
@@ -28,6 +31,39 @@ public class SSEHandler {
     private static final String EVENT_SPOT_UPDATE   = "spotUpdate";
     
     private static final ObservingClientsHolder CLIENT_HANDLER = new ObservingClientsHolder();
+    private static final OM2MObservable.Observer UPDATE_OBSERVER = new OM2MObservable.Observer() {
+        @Override
+        public void onObservableChanged(OM2MObservable observable, OM2MResource newResource) {
+            
+            if(ParksDataHandler.isParkStatusUpdate(newResource)) {
+                // The price of a park has been updated
+                final ParkStatus park = ParksDataHandler.getParkStatus(newResource);
+                final String parkID = park.getParkID();
+                final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
+                
+                for( AsyncContext client : clients) {
+                    sendParkUpdate(client, park);
+                }
+                
+                return;
+            }
+            
+            if(ParksDataHandler.isSpotStatusUpdate(newResource)) {
+                // The price of a park has been updated
+                final SpotStatus spot = ParksDataHandler.getSpotStatus(newResource);
+                final String parkID = spot.getParkID();
+                final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
+                
+                for( AsyncContext client : clients) {
+                    sendSpotUpdate(client, spot);
+                }
+                
+                return;
+            }
+            
+        }
+        
+    };
     
     private SSEHandler() {
     }
@@ -35,7 +71,7 @@ public class SSEHandler {
     public static AsyncContext createSSEStream(HttpServletRequest request) {
         final AsyncContext client;
         
-        client = request.startAsync();
+        client = request.startAsync();  
         setClientRetryInterval(client);
         client.setTimeout(TIMEOUT_INTERVAL);
         CLIENT_HANDLER.addWaitingClient(client);
@@ -113,19 +149,28 @@ public class SSEHandler {
     }
     
     public static void sendParkUpdate(final AsyncContext client, final ParkStatus park) {
-        // TODO: implement it
+        final JSONObject data = park.toJSONObject();
+        
+        if(!sendEvent(client, EVENT_PARK_UPDATE, data.toString())) {
+            removeClient(client);
+        }
     }
     
     public static void sendSpotUpdate(final AsyncContext client, final SpotStatus spot) {
-        // TODO: implement it
+        final JSONObject data = spot.toJSONObject();
+        
+        if(!sendEvent(client, EVENT_SPOT_UPDATE, data.toString())) {
+            removeClient(client);
+        }
     }
+
     
     public static void init() {
         CLIENT_HANDLER.reset();
     }
     
     public static Observer getObserver() {
-        return CLIENT_HANDLER;
+        return UPDATE_OBSERVER;
     }
     
     public static boolean isClientWaiting(AsyncContext client) {
