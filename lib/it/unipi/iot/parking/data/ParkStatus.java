@@ -23,7 +23,7 @@ public class ParkStatus {
     private final double          latitude;
     private final double          longitude;
     private final String          address;
-    private final double          price;
+    private double                price;
     private final String          openingTime;
     private final String          closingTime;
     private final Set<SpotStatus> spots = new HashSet<>();
@@ -63,6 +63,10 @@ public class ParkStatus {
     
     public double getPrice() {
         return price;
+    }
+    
+    public void setPrice(double price) {
+        this.price = price;
     }
     
     public String getOpeningTime() {

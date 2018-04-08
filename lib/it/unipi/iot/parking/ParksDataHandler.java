@@ -1,6 +1,7 @@
 package it.unipi.iot.parking;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -155,7 +156,7 @@ public class ParksDataHandler {
         if (uril.length > 1 || uril.length < 1)
             throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
         
-        ContentInstance status = (ContentInstance) OM2M_NODE.get(uril[0] + "/la"); 
+        ContentInstance status = (ContentInstance) OM2M_NODE.get(uril[0] + "/la");
         
         parkStatus = new ParkStatus(parkID, status.getContentValue());
         parkStatus.setAvailable(true); // TODO: implement it
@@ -175,6 +176,22 @@ public class ParksDataHandler {
         }
         
         return parkStatus;
+    }
+    
+    private static boolean checkType(OM2MResource resource, String type) {
+        final String expectedType = LabelsFactory.getTypeFilter(type);
+        final String[] labels = resource.getLabels();
+        
+        return (Arrays.asList(labels)
+                      .contains(expectedType));
+    }
+    
+    public static boolean isParkStatusUpdate(OM2MResource resource) {
+        return checkType(resource, "manifest-data");
+    }
+    
+    public static boolean isSpotStatusUpdate(OM2MResource resource) {
+        return checkType(resource, "instance");
     }
     
     public static ParkStatus getParkDataFromURI(String parkPath)
@@ -227,26 +244,30 @@ public class ParksDataHandler {
         
         String[] uri = OM2M_NODE.discovery(parkID, filters);
         
-        if (uri.length > 0)
+        if (uri.length > 1)
             throw new OM2MException(
                     "Too many spots associated with the same parkID and resourceName!",
                     ErrorCode.OTHER);
         
         String spotID = getResourceIDFromPath(uri[0]);
         
-        value = (ContentInstance) OM2M_NODE.get(spotID + "/la");
+        value = (ContentInstance) OM2M_NODE.get(uri[0] + "/la");
         
-        JSONObject contentValue = new JSONObject(value.getContentValue());
+        SpotStatus spot = new SpotStatus(parkID, spotID, value.getContentValue());
         
         // TODO: move constants to other file
-        if (contentValue.getBoolean("free") == free) {
+        if (spot.isFree() == free) {
             return false;
         }
         
         // Change the spot value
         // TODO: add all necessary values
-        contentValue = new JSONObject().put("free", free)
-                                       .put("user", user);
+        
+        if(free) {
+            spot.setFree();
+        } else {
+            spot.setOccupied(user);
+        }
         
         final String[] labels = new LabelsFactory().setParentID(spotID)
                                                    .setParkID(parkID)
@@ -254,7 +275,7 @@ public class ParksDataHandler {
                                                    .setType("instance")
                                                    .getLabels();
         
-        OM2M_NODE.createContentInstance(spotID, contentValue.toString(), labels);
+        OM2M_NODE.createContentInstance(spotID, spot.toString(), labels);
         
         return true;
     }
@@ -497,6 +518,11 @@ public class ParksDataHandler {
             return getValue(labels, prefix);
         }
         
+        public static String getSpotID(String[] labels) {
+            final String prefix = "sn" + SEP; // FIXME: wrong
+            return getValue(labels, prefix);
+        }
+        
         public static String getSpotName(String[] labels) {
             final String prefix = "sn" + SEP;
             return getValue(labels, prefix);
@@ -590,5 +616,40 @@ public class ParksDataHandler {
             return labels;
         }
         
+    }
+    
+    public static ParkStatus getParkStatus(OM2MResource resource) {
+        final ContentInstance actualResource;
+        final JSONObject data;
+        final ParkStatus park;
+        final String parkID;
+        
+        if (!isParkStatusUpdate(resource))
+            throw new IllegalArgumentException("The given value is not a park status update!");
+        
+        actualResource = (ContentInstance) resource;
+        data = actualResource.getContentValue();
+        parkID = LabelsFactory.getParkID(actualResource.getLabels());
+        park = new ParkStatus(parkID, data);
+        
+        return park;
+    }
+    
+    public static SpotStatus getSpotStatus(OM2MResource resource) {
+        final ContentInstance actualResource;
+        final JSONObject data;
+        final SpotStatus park;
+        final String parkID, spotID;
+        
+        if (!isSpotStatusUpdate(resource))
+            throw new IllegalArgumentException("The given value is not a spot status update!");
+        
+        actualResource = (ContentInstance) resource;
+        data = actualResource.getContentValue();
+        parkID = LabelsFactory.getParkID(actualResource.getLabels());
+        spotID = actualResource.getParentID();
+        park = new SpotStatus(parkID, spotID, data);
+        
+        return park;
     }
 }

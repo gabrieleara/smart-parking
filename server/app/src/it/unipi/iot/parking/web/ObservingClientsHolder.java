@@ -8,11 +8,9 @@ import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 
-import it.unipi.iot.parking.om2m.data.OM2MResource;
-import it.unipi.iot.parking.util.OM2MObservable;
 import it.unipi.iot.parking.util.SimpleMultiMap;
 
-public class ObservingClientsHolder implements OM2MObservable.Observer {
+public class ObservingClientsHolder {
     private final Object COLLECTIONS_MONITOR = new Object();
     
     /**
@@ -107,17 +105,24 @@ public class ObservingClientsHolder implements OM2MObservable.Observer {
         }
     }
     
-    public AsyncListener getClientEventListener() {
-        return clientEventListener;
+    public Set<AsyncContext> getAssociatedClients(String parkID) {
+        final Set<AsyncContext> clientsReference;
+        final Set<AsyncContext> clients;
+        
+        synchronized (COLLECTIONS_MONITOR) {
+            clientsReference = servedClients.get(parkID);
+            
+            if(clientsReference == null)
+                clients = new HashSet<>();
+            else
+                clients = new HashSet<>(clientsReference);
+        }
+        
+        return clients;
     }
     
-    // TODO: hide the resource behind this, keep only the data inferred from the new
-    // value after implementing the classes associated to a park manifest and a park
-    // spot and their statuses
-    @Override
-    public void onObservableChanged(OM2MObservable observable, OM2MResource newResource) {
-        // TODO: implement this
-        System.out.println("FUNZIONA!");
+    public AsyncListener getClientEventListener() {
+        return clientEventListener;
     }
     
     public void reset() {

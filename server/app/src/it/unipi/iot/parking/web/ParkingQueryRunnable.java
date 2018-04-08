@@ -9,7 +9,6 @@ import javax.servlet.AsyncContext;
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.data.ParkStatus;
 import it.unipi.iot.parking.util.Bounds;
-import it.unipi.iot.parking.util.SSEHandler;
 
 class GetParksRunnable implements Runnable {
     private final AsyncContext client;
