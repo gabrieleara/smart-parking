@@ -10,12 +10,12 @@ public class SpotStatus {
     private final static String STRING_FREE      = "free";
     private final static String STRING_USER      = "user";
     
-    private final String  id;
-    private final String  parkID;
-    private final double  latitude;
-    private final double  longitude;
-    private boolean free;
-    private String  user;
+    private final String id;
+    private final String parkID;
+    private final double latitude;
+    private final double longitude;
+    private boolean      free;
+    private String       user;
     
     public SpotStatus(String parkID, String id, JSONObject data) {
         this.id = id;
@@ -75,7 +75,7 @@ public class SpotStatus {
     public String toString() {
         return toJSONObject().toString();
     }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -83,7 +83,7 @@ public class SpotStatus {
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         return result;
     }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

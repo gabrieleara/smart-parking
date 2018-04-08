@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import it.unipi.iot.parking.data.ParkStatus;
 import it.unipi.iot.parking.data.SpotStatus;
+import it.unipi.iot.parking.data.UserData;
 import it.unipi.iot.parking.om2m.ErrorCode;
 import it.unipi.iot.parking.om2m.OM2M;
 import it.unipi.iot.parking.om2m.OM2MConstants;
@@ -258,7 +259,7 @@ public class ParksDataHandler {
             return false;
         }
         
-        if(free) {
+        if (free) {
             spot.setFree();
         } else {
             spot.setOccupied(user);
@@ -472,6 +473,7 @@ public class ParksDataHandler {
         private String parkID;
         private String spotName;
         private String remoteID;
+        private String username;
         
         public static String getParentFilter(String parentID) {
             return "pi" + SEP + parentID;
@@ -495,6 +497,10 @@ public class ParksDataHandler {
         
         public static String getRemoteFilter(String remoteID) {
             return "rmtid" + SEP + remoteID;
+        }
+        
+        public static String getUsernameFilter(String username) {
+            return "user" + SEP + username;
         }
         
         private static String getValue(String[] labels, String prefix) {
@@ -568,6 +574,11 @@ public class ParksDataHandler {
             return this;
         }
         
+        public LabelsFactory setUsername(String username) {
+            this.username = username;
+            return this;
+        }
+        
         public String[] getLabels() {
             ArrayList<String> labels = new ArrayList<>();
             
@@ -591,6 +602,10 @@ public class ParksDataHandler {
             
             if (remoteID != null) {
                 labels.add(getRemoteFilter(remoteID));
+            }
+            
+            if (username != null) {
+                labels.add(getUsernameFilter(username));
             }
             
             return labels.toArray(new String[labels.size()]);
@@ -642,4 +657,106 @@ public class ParksDataHandler {
         
         return park;
     }
+    
+    public static ApplicationEntity initUsers() throws OM2MException, TimeoutException {
+        final String parentID;
+        final String[] labels;
+        final ApplicationEntity users;
+        
+        parentID = getResourceIDFromPath(AppConfig.CSE_ID);
+        
+        labels = new LabelsFactory().setParentID(parentID)
+                                    .setResourceName("users")
+                                    .setType("users")
+                                    .getLabels();
+        
+        users = OM2M_NODE.createApplicationEntity(parentID, "users-api", "users", labels);
+        
+        return users;
+    }
+    
+    // TODO: move from String data to structured UserData data
+    public static UserData register(String username, String password, String email, String credit)
+            throws OM2MException, TimeoutException {
+        
+        String[] labels;
+        
+        final Container container;
+        final String userID;
+        final String parentID;
+        
+        final String[] filters = new LabelsFactory().setParentID("/" + AppConfig.CSE_ID)
+                                                    .setType("users")
+                                                    .getFilters();
+        
+        final String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length < 1 || uril.length > 1) {
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        }
+        
+        labels = new LabelsFactory().setUsername(username)
+                                    .setType("user")
+                                    .getLabels();
+        
+        parentID = getResourceIDFromPath(uril[0]);
+        
+        try {
+            container = OM2M_NODE.createContainer(parentID, username, labels);
+        } catch (OM2MException e) {
+            if (e.getCode() == ErrorCode.NAME_ALREADY_PRESENT) {
+                return null; // Tried to register two times the same username
+            } else {
+                throw e;
+            }
+        }
+        
+        userID = container.getResourceID();
+        
+        labels = new LabelsFactory().setParentID(userID)
+                                    .setType("user-data")
+                                    .getLabels();
+        
+        UserData data = new UserData(userID, username, email, credit);
+        
+        JSONObject value = data.toJSONObject()
+                               .put("password", password);
+        
+        OM2M_NODE.createContentInstance(container.getResourceID(), value.toString(), labels);
+        
+        return data;
+        
+    }
+    
+    public static UserData login(String username, String password)
+            throws OM2MException, TimeoutException {
+        final String[] filters;
+        final String[] uril;
+        final ContentInstance content;
+        final JSONObject value;
+        
+        filters = new LabelsFactory().setType("user")
+                                     .setUsername(username)
+                                     .getFilters();
+        
+        uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length < 1)
+            return null;
+        
+        if (uril.length > 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        content = (ContentInstance) OM2M_NODE.get(uril[0] + "/la");
+        
+        value = content.getContentValue();
+        
+        if (value.getString("password")
+                 .equals(password)) {
+            return new UserData(value);
+        }
+        
+        return null; // Login failed
+    }
+    
 }

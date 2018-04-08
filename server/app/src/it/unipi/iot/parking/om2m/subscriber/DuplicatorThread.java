@@ -11,8 +11,6 @@ import it.unipi.iot.parking.om2m.ErrorCode;
 import it.unipi.iot.parking.om2m.OM2MException;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 
-//TODO: some copies may be scheduled to be written, but never are if the thread
-//is interrupted
 public class DuplicatorThread extends Thread {
     
     private final SortedSet<CopyRequest> queue = new TreeSet<>();
