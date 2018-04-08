@@ -675,7 +675,6 @@ public class ParksDataHandler {
         return users;
     }
     
-    // TODO: move from String data to structured UserData data
     public static UserData register(String username, String password, String email, String credit)
             throws OM2MException, TimeoutException {
         

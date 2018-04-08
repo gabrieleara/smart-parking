@@ -48,7 +48,6 @@ public class LoginServlet extends HttpServlet {
         // Check if this is new comer on your web page.
         if (session.isNew()) {
             // Perform login and store it
-            // TODO: check for no argument
             String username = request.getParameter("username");
             if (username == null) {
                 session.invalidate();

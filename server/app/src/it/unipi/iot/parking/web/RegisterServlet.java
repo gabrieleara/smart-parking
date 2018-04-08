@@ -47,9 +47,7 @@ public class RegisterServlet extends HttpServlet {
         
         // Check if this is new comer on your web page.
         if (session.isNew()) {
-            // Perform login and store it
-            // TODO: check for no argument
-            
+            // Perform registration and store data
             String username = request.getParameter("username");
             if (username == null) {
                 session.invalidate();
@@ -123,7 +121,6 @@ public class RegisterServlet extends HttpServlet {
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO Auto-generated method stub
         doGet(request, response);
     }
     
