@@ -18,9 +18,6 @@ public class CopyResourceSubscriber extends ResourceSubscriber implements OM2MOb
     private final String baseCopyURI;
     private final ConcurrentOM2MObservable observable = new ConcurrentOM2MObservable();
     
-    // FIXME:
-    // Si assume che non arrivino richieste di cambio di stato eccessivamente rapide
-    // da parte delle CI
     public CopyResourceSubscriber(ResourceSubscriber parentResource, String name,
             String baseCopyURI) {
         super(parentResource, name);
@@ -62,7 +59,6 @@ public class CopyResourceSubscriber extends ResourceSubscriber implements OM2MOb
         if (resource == null)
             return;
         
-        // FIXME: that this is a synchronized call and may take a while
         DuplicatorThread.getInstance()
                         .requestCopy(resource, this);
         

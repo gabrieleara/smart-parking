@@ -306,8 +306,6 @@ public class OM2M {
         
         response = performDelete(concatURIs(resourceID));
         
-        // TODO: change to a check response before getting the payload
-        
         getResponsePayload(response, -1, OM2MConstants.RESPONSE_ACCEPTED);
     }
     
@@ -321,8 +319,6 @@ public class OM2M {
      * @param resourceID
      * @return the requested resource, if it exists, null otherwise
      * @throws TimeoutException
-     * 
-     *             TODO: documentation and correct implementation of this method
      * @throws OM2MException
      */
     public String[] discovery(final String resourceID, final String[] uriQueries)
@@ -331,8 +327,6 @@ public class OM2M {
         final CoapResponse response;
         final JSONArray juril;
         final String[] uril;
-        
-        // TODO: throw TimeoutException if the get request returns null
         
         queries = new String[uriQueries.length + 1];
         
@@ -359,11 +353,6 @@ public class OM2M {
         }
         
         return uril;
-    }
-    
-    // TODO: remove after tests are done!
-    public String testQuery(final String resourceID, final String[] uriQueries) {
-        return performGet(resourceID, uriQueries).getResponseText();
     }
     
     /*

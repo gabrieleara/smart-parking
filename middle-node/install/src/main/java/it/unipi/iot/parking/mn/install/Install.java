@@ -1,6 +1,5 @@
 package it.unipi.iot.parking.mn.install;
 
-import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 
 import it.unipi.iot.parking.AppConfig;
@@ -8,8 +7,6 @@ import it.unipi.iot.parking.ParkConfig;
 import it.unipi.iot.parking.ParksDataHandler;
 
 public class Install {
-    // TODO: in the end it will be `throws Exception!` However, some exceptions
-    // shall be caught, like when we try to double create something
     public static void main(String[] args) throws TimeoutException {
         try {
             for (final ParkConfig p : AppConfig.PARKS) {
@@ -17,7 +14,7 @@ public class Install {
             }
         } catch (Exception e) {
         }
-        
+        /*
         // TODO: remove, this is a test of the actual behavior of the parks and spots
         @SuppressWarnings("resource")
         Scanner in = new Scanner(System.in);
@@ -40,7 +37,7 @@ public class Install {
                 System.out.println("Spot has been occupied!");
             }
         }
-        
+        */
         /*
          * // TODO: delete the following code, needed only to test discoveries of data
          * String[] parks = ParksDataHandler.getAllParksList();

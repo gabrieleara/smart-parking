@@ -140,11 +140,19 @@ public class SimpleMultiMap<K, V> {
         for (K key : keySet) {
             Set<V> valSet = _map.get(key);
             
-            if(valSet.contains(value))
+            if (valSet.contains(value))
                 return true;
         }
         
         return false;
+    }
+    
+    /**
+     * Removes all of the mappings from this map. The map will be empty after this
+     * call returns.
+     */
+    public void clear() {
+        _map.clear();
     }
     
     /**

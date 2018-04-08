@@ -44,7 +44,7 @@ public class ObservingClientsHolder {
         
         @Override
         public void onStartAsync(AsyncEvent event) throws IOException {
-            // TODO: do nothing?
+            // Do nothing
         }
         
         @Override
@@ -126,6 +126,9 @@ public class ObservingClientsHolder {
     }
     
     public void reset() {
-        // TODO: implement it
+        synchronized (COLLECTIONS_MONITOR) {
+            waitingClients.clear();
+            servedClients.clear();
+        }
     }
 }

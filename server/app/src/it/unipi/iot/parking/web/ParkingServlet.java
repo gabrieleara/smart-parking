@@ -20,7 +20,6 @@ import it.unipi.iot.parking.util.Bounds;
 /**
  * Servlet implementation class BackgroundServlet
  */
-// TODO: LOGGER
 @WebServlet(name = "parks-servlet", urlPatterns = {
         "/servlets/parks" }, loadOnStartup = 1, asyncSupported = true)
 public class ParkingServlet extends HttpServlet {
@@ -107,8 +106,7 @@ public class ParkingServlet extends HttpServlet {
         
         server.stop();
         dthread.interrupt();
-        // TODO: Destroy all clients
-        // TODO: Stop pool of executors and create later a new one
+        requestsExecutor.shutdown();
         
         try {
             dthread.join();
@@ -117,13 +115,11 @@ public class ParkingServlet extends HttpServlet {
                     "Server was terminated before the termination of the Duplicator Thread.");
         }
         
-        dthread = null;
-        
-        // TODO: check if this is needed (shouldn't be)
+        SSEHandler.clear();
         // server.destroy();
         // server = null;
-        
-        System.out.println(ParkingServlet.class.getName() + " has been destroyed!");
+        dthread = null;
+        requestsExecutor = null;
     }
     
 }

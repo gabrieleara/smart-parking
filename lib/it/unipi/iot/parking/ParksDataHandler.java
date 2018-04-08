@@ -141,7 +141,6 @@ public class ParksDataHandler {
         return parkIDs;
     }
     
-    // TODO: add more data here if necessary
     public static ParkStatus getParkStatus(String parkID) throws OM2MException, TimeoutException {
         String[] filters;
         String[] uril;
@@ -255,13 +254,9 @@ public class ParksDataHandler {
         
         SpotStatus spot = new SpotStatus(parkID, spotID, value.getContentValue());
         
-        // TODO: move constants to other file
         if (spot.isFree() == free) {
             return false;
         }
-        
-        // Change the spot value
-        // TODO: add all necessary values
         
         if(free) {
             spot.setFree();
@@ -515,11 +510,6 @@ public class ParksDataHandler {
         
         public static String getParkID(String[] labels) {
             final String prefix = "pkid" + SEP;
-            return getValue(labels, prefix);
-        }
-        
-        public static String getSpotID(String[] labels) {
-            final String prefix = "sn" + SEP; // FIXME: wrong
             return getValue(labels, prefix);
         }
         

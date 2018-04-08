@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.servlet.AsyncContext;
@@ -30,36 +34,57 @@ public class SSEHandler {
     private static final String EVENT_PARK_UPDATE   = "parkUpdate";
     private static final String EVENT_SPOT_UPDATE   = "spotUpdate";
     
+    private static ExecutorService requestsExecutor;
+    
     private static final ObservingClientsHolder CLIENT_HANDLER = new ObservingClientsHolder();
+    
+    private static class StatusChangedRunnable implements Runnable {
+        final OM2MResource resource;
+        
+        public StatusChangedRunnable(OM2MResource resource) {
+            this.resource = resource;
+        }
+        
+        public void deliverParkUpdate() {
+            // The price of a park has been updated
+            final ParkStatus park = ParksDataHandler.getParkStatus(resource);
+            final String parkID = park.getParkID();
+            final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
+            
+            for (AsyncContext client : clients) {
+                sendParkUpdate(client, park);
+            }
+        }
+        
+        public void deliverSpotUpdate() {
+            // The status of a spot has been updated
+            final SpotStatus spot = ParksDataHandler.getSpotStatus(resource);
+            final String parkID = spot.getParkID();
+            final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
+            
+            for (AsyncContext client : clients) {
+                sendSpotUpdate(client, spot);
+            }
+            
+        }
+        
+        @Override
+        public void run() {
+            if (ParksDataHandler.isParkStatusUpdate(resource))
+                deliverParkUpdate();
+            else if (ParksDataHandler.isSpotStatusUpdate(resource))
+                deliverSpotUpdate();
+            
+        }
+        
+    }
+    
     private static final OM2MObservable.Observer UPDATE_OBSERVER = new OM2MObservable.Observer() {
         @Override
         public void onObservableChanged(OM2MObservable observable, OM2MResource newResource) {
             
-            if(ParksDataHandler.isParkStatusUpdate(newResource)) {
-                // The price of a park has been updated
-                final ParkStatus park = ParksDataHandler.getParkStatus(newResource);
-                final String parkID = park.getParkID();
-                final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
-                
-                for( AsyncContext client : clients) {
-                    sendParkUpdate(client, park);
-                }
-                
-                return;
-            }
-            
-            if(ParksDataHandler.isSpotStatusUpdate(newResource)) {
-                // The price of a park has been updated
-                final SpotStatus spot = ParksDataHandler.getSpotStatus(newResource);
-                final String parkID = spot.getParkID();
-                final Set<AsyncContext> clients = CLIENT_HANDLER.getAssociatedClients(parkID);
-                
-                for( AsyncContext client : clients) {
-                    sendSpotUpdate(client, spot);
-                }
-                
-                return;
-            }
+            StatusChangedRunnable task = new StatusChangedRunnable(newResource);
+            requestsExecutor.execute(task);
             
         }
         
@@ -71,7 +96,7 @@ public class SSEHandler {
     public static AsyncContext createSSEStream(HttpServletRequest request) {
         final AsyncContext client;
         
-        client = request.startAsync();  
+        client = request.startAsync();
         setClientRetryInterval(client);
         client.setTimeout(TIMEOUT_INTERVAL);
         CLIENT_HANDLER.addWaitingClient(client);
@@ -101,15 +126,18 @@ public class SSEHandler {
         
         try {
             response = client.getResponse();
-            out = response.getWriter();
-            out.write("event: " + event + "\n");
-            out.write("data: " + data + "\n\n");
-            if (out.checkError()) { // checkError calls flush, and flush() does not throw
-                                    // IOException
-                return false;
-            }
             
-            return true;
+            synchronized (response) {
+                out = response.getWriter();
+                out.write("event: " + event + "\n");
+                out.write("data: " + data + "\n\n");
+                if (out.checkError()) { // checkError calls flush, and flush() does not throw
+                                        // IOException
+                    return false;
+                }
+                
+                return true;
+            }
         } catch (IllegalStateException | IOException ignored) {
             return false;
         }
@@ -151,7 +179,7 @@ public class SSEHandler {
     public static void sendParkUpdate(final AsyncContext client, final ParkStatus park) {
         final JSONObject data = park.toJSONObject();
         
-        if(!sendEvent(client, EVENT_PARK_UPDATE, data.toString())) {
+        if (!sendEvent(client, EVENT_PARK_UPDATE, data.toString())) {
             removeClient(client);
         }
     }
@@ -159,14 +187,21 @@ public class SSEHandler {
     public static void sendSpotUpdate(final AsyncContext client, final SpotStatus spot) {
         final JSONObject data = spot.toJSONObject();
         
-        if(!sendEvent(client, EVENT_SPOT_UPDATE, data.toString())) {
+        if (!sendEvent(client, EVENT_SPOT_UPDATE, data.toString())) {
             removeClient(client);
         }
     }
-
     
     public static void init() {
         CLIENT_HANDLER.reset();
+        requestsExecutor = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>());
+    }
+    
+    public static void clear() {
+        CLIENT_HANDLER.reset();
+        requestsExecutor.shutdown();
+        requestsExecutor = null;
     }
     
     public static Observer getObserver() {

@@ -144,7 +144,6 @@ public class OM2MResource implements Comparable<OM2MResource> {
         throw new OM2MException(ErrorCode.OTHER);
     }
     
-    // TODO: add an exception also here maybe?
     public static OM2MResource fromJSONObject(JSONObject obj) {
         OM2MResource res = null;
         

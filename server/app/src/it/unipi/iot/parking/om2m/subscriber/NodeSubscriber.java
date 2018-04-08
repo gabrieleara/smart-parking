@@ -55,7 +55,6 @@ public class NodeSubscriber extends ResourceSubscriber {
         
         // NOTICE: this gives no error if we create two times the same resource, but the
         // previous one gets substituted with the new one
-        // TODO: check if this behavior is bad or not
         CopyResourceSubscriber csr = new CopyResourceSubscriber(this, resourceID,
                 rcse.getResourceID());
         
@@ -66,7 +65,7 @@ public class NodeSubscriber extends ResourceSubscriber {
         try {
             ParksDataHandler.deleteAllSubscriptions(rcse.getCSEID());
         } catch (TimeoutException e) {
-            return; // TODO: what to do when this does not reply?
+            return;
         }
         
         csr.addSubscription(rcse.getCSEID());
