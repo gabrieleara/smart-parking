@@ -11,6 +11,7 @@
 		{
 			"app_id": "lazzarino-api",
 			"name":"lazzarino",
+			"netip":"fe80::",
 			"spots": [
 				{
 					"lat": "43.720660",
@@ -29,6 +30,7 @@
 		{
 			"app_id": "giuntapisano-api",
 			"name":"giuntapisano",
+			"netip":"fe80::",
 			"spots": [
 				{
 					"lat": "43.721719",
@@ -46,6 +48,7 @@
 		{
 			"app_id": "galileilivorno-api",
 			"name":"galileilivorno",
+			"netip":"fe80::",
 			"spots": [
 				{
 					"address"	: 	"Via Galileo Galilei - Pisa PI 56126",

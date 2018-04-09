@@ -7,6 +7,7 @@ public class ParkConfig {
     
     public final String name;
     public final String appID;
+    public final String netIP;
     
     // This means also spot number zero, which actually is the manifest of the park
     public final String[] spots;
@@ -14,6 +15,7 @@ public class ParkConfig {
     public ParkConfig(JSONObject data) {
         appID = data.getString("app_id");
         name = data.getString("name");
+        netIP = data.getString("netip");
         
         JSONArray spotsData = data.getJSONArray("spots");
         
