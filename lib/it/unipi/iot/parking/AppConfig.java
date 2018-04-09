@@ -16,7 +16,7 @@ public class AppConfig {
     public static final String CSE_ID;
     public static final String CSE_NAME;
     public static final String NODE_TYPE;   // Can be either "IN" or "MN"
-    // public static final String IN_ID;
+    public static final String IN_ID;
     
     /**
      * Only for MN, null for IN
@@ -42,6 +42,7 @@ public class AppConfig {
         CREDENTIALS = obj.getString("credentials");
         CSE_ID = obj.getString("cse_id");
         CSE_NAME = obj.getString("cse_name");
+        IN_ID = obj.optString("in_id");
         NODE_TYPE = obj.getString("node_type");
         
         if (NODE_TYPE.equalsIgnoreCase("MN")) {

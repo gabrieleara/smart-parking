@@ -1,19 +1,27 @@
 package it.unipi.iot.parking.data;
 
+import java.util.Date;
+
 import org.json.JSONObject;
 
+import it.unipi.iot.parking.util.DateConverter;
+
 public class SpotStatus {
-    private final static String STRING_ID        = "id";
-    private final static String STRING_PARK_ID   = "parkID";
-    private final static String STRING_LATITUDE  = "lat";
-    private final static String STRING_LONGITUDE = "lon";
-    private final static String STRING_FREE      = "free";
-    private final static String STRING_USER      = "user";
+    private final static String STRING_ID         = "id";
+    private final static String STRING_PARK_ID    = "parkID";
+    private final static String STRING_LATITUDE   = "lat";
+    private final static String STRING_LONGITUDE  = "lon";
+    private final static String STRING_FREE       = "free";
+    private final static String STRING_USER       = "user";
+    private final static String STRING_PRICE      = "price";
+    private final static String STRING_START_TIME = "startT";
     
     private final String id;
     private final String parkID;
     private final double latitude;
     private final double longitude;
+    private double       price;
+    private Date         startTime;
     private boolean      free;
     private String       user;
     
@@ -24,6 +32,14 @@ public class SpotStatus {
         this.longitude = data.getDouble(STRING_LONGITUDE);
         this.free = data.getBoolean(STRING_FREE);
         this.user = data.optString(STRING_USER, null);
+        this.price = data.optDouble(STRING_PRICE, 0.0);
+        
+        String startTime = data.optString(STRING_START_TIME, null);
+        
+        if (startTime == null)
+            this.startTime = null;
+        else
+            this.startTime = DateConverter.fromString(startTime);
     }
     
     public String getId() {
@@ -50,18 +66,30 @@ public class SpotStatus {
         return user;
     }
     
-    public void setOccupied(String user) {
-        this.free = false;
-        this.user = user;
+    public double getPrice() {
+        return price;
     }
     
-    public void setFree() {
+    public Date getStartTime() {
+        return startTime;
+    }
+    
+    public void occupy(String user, double price) {
+        this.free = false;
+        this.user = user;
+        this.startTime = new Date();
+        this.price = price;
+    }
+    
+    public void free() {
         this.free = true;
         this.user = null;
+        this.startTime = null;
+        this.price = 0.0;
     }
     
     public JSONObject toJSONObject() {
-        final JSONObject obj;
+        JSONObject obj;
         
         obj = new JSONObject().put(STRING_ID, this.id)
                               .put(STRING_PARK_ID, this.parkID)
@@ -69,6 +97,13 @@ public class SpotStatus {
                               .put(STRING_LONGITUDE, this.longitude)
                               .put(STRING_FREE, this.free)
                               .put(STRING_USER, this.user);
+        
+        if (startTime != null)
+            obj = obj.put(STRING_START_TIME, DateConverter.fromDate(startTime));
+        
+        if (price != 0.0)
+            obj = obj.put(STRING_PRICE, price);
+        
         return obj;
     }
     

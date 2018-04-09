@@ -2,7 +2,9 @@ package it.unipi.iot.parking;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,6 +12,7 @@ import java.util.logging.Logger;
 import org.json.JSONObject;
 
 import it.unipi.iot.parking.data.ParkStatus;
+import it.unipi.iot.parking.data.PaymentData;
 import it.unipi.iot.parking.data.SpotStatus;
 import it.unipi.iot.parking.data.UserData;
 import it.unipi.iot.parking.om2m.ErrorCode;
@@ -22,6 +25,7 @@ import it.unipi.iot.parking.om2m.data.Container;
 import it.unipi.iot.parking.om2m.data.ContentInstance;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 import it.unipi.iot.parking.om2m.data.Subscription;
+import it.unipi.iot.parking.util.DateConverter;
 
 // NOTICE: these methods should be synchronized properly!
 public class ParksDataHandler {
@@ -42,6 +46,24 @@ public class ParksDataHandler {
         OM2M_NODE = new OM2M(SESSION_DATA);
     }
     
+    public static ApplicationEntity initMN() throws OM2MException, TimeoutException {
+        final String parentID;
+        final String[] labels;
+        final ApplicationEntity paymentsAE;
+        
+        parentID = getResourceIDFromPath(AppConfig.CSE_ID);
+        
+        labels = new LabelsFactory().setParentID(parentID)
+                                    .setResourceName("payments")
+                                    .setType("payments-cnt")
+                                    .getLabels();
+        
+        paymentsAE = OM2M_NODE.createApplicationEntity(parentID, "payments-api", "payments",
+                labels);
+        
+        return paymentsAE;
+    }
+    
     public static ApplicationEntity createPark(ParkConfig conf)
             throws OM2MException, TimeoutException {
         final String parentID;
@@ -56,6 +78,25 @@ public class ParksDataHandler {
                                     .getLabels();
         
         park = OM2M_NODE.createApplicationEntity(parentID, conf.appID, conf.name, labels);
+        
+        // Now create park entry in payments application entity
+        final String[] filters = new LabelsFactory().setResourceName("payments")
+                                                    .getFilters();
+        
+        final String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length > 1 || uril.length < 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        String paymentsID = getResourceIDFromPath(uril[0]);
+        
+        String[] plabels = new LabelsFactory().setParentID(paymentsID)
+                                              .setResourceName(conf.name)
+                                              .setParkID(park.getResourceID())
+                                              .setType("payments-park")
+                                              .getLabels();
+        
+        OM2M_NODE.createContainer(paymentsID, conf.name, plabels);
         
         for (int index = 0; index < conf.spots.length; ++index) {
             createSpot(park.getResourceID(), conf.spots[index], index);
@@ -213,10 +254,84 @@ public class ParksDataHandler {
     
     public static boolean freeSpot(String parkID, int index)
             throws OM2MException, TimeoutException {
-        return setSpot(parkID, index, true, null);
+        // setSpot shall return the previous user and the previous price, unfortunately
+        SpotStatus oldStatus = setSpot(parkID, index, true, null);
+        
+        if (oldStatus == null)
+            return false;
+        
+        // Create the payment
+        String username = oldStatus.getUser();
+        Date startTime = oldStatus.getStartTime();
+        Date endTime = new Date();
+        
+        long diffInMillies = endTime.getTime() - startTime.getTime();
+        long minutesElapsed = TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
+        
+        // Price is hourly, but you pay for real minutes
+        double cost = oldStatus.getPrice() * ((double) minutesElapsed) / 60;
+        
+        cost = Math.floor(cost*100)/100;
+        
+        PaymentData payment = new PaymentData(cost, startTime, endTime);
+        
+        // Get payments container for the given parkID
+        String[] filters = new LabelsFactory().setParkID(parkID)
+                                              .setType("payments-park")
+                                              .getFilters();
+        
+        String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length < 1 || uril.length > 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        String parentID = getResourceIDFromPath(uril[0]);
+        
+        String[] labels = new LabelsFactory().setParentID(parentID)
+                                             .setType("payment-data")
+                                             .setUsername(username)
+                                             .setDate(startTime)
+                                             .getLabels();
+        
+        OM2M_NODE.createContentInstance(parentID, payment.toString(), labels);
+        
+        return true;
     }
     
-    public static boolean occupySpot(String parkID, int index, String user)
+    private static final Object OCCUPY_SPOT_MONITOR = new Object();
+    
+    public static boolean payForSpot(String parkID, int index, String user, String credit)
+            throws OM2MException, TimeoutException {
+        // Check that payment information are correct
+        String[] filters;
+        String[] uril;
+        ContentInstance userContent;
+        UserData userData;
+        
+        filters = new LabelsFactory().setUsername(user)
+                                     .setType("user")
+                                     .getFilters();
+        
+        uril = OM2M_NODE.discovery(AppConfig.IN_ID, filters);
+        
+        if (uril.length < 1 || uril.length > 1)
+            return false; // User not found!
+            
+        userContent = (ContentInstance) OM2M_NODE.get(uril[0] + "/la");
+        userData = new UserData(userContent.getContentValue());
+        
+        // Wrong payment info
+        if (!credit.equals(userData.getCredit()))
+            return false;
+        
+        // OK payment info are correct, let us try to occupy a spot
+        if (occupySpot(parkID, index, user) == null)
+            return false; // Was not able to occupy the spot
+            
+        return true;
+    }
+    
+    public static SpotStatus occupySpot(String parkID, int index, String user)
             throws OM2MException, TimeoutException {
         return setSpot(parkID, index, false, user);
     }
@@ -230,7 +345,7 @@ public class ParksDataHandler {
      * @return
      * @throws TimeoutException
      */
-    private static boolean setSpot(String parkID, int index, boolean free, String user)
+    private static SpotStatus setSpot(String parkID, int index, boolean free, String user)
             throws OM2MException, TimeoutException {
         final String containerName;
         final ContentInstance value;
@@ -251,29 +366,44 @@ public class ParksDataHandler {
         
         String spotID = getResourceIDFromPath(uri[0]);
         
-        value = (ContentInstance) OM2M_NODE.get(uri[0] + "/la");
-        
-        SpotStatus spot = new SpotStatus(parkID, spotID, value.getContentValue());
-        
-        if (spot.isFree() == free) {
-            return false;
+        synchronized (OCCUPY_SPOT_MONITOR) {
+            value = (ContentInstance) OM2M_NODE.get(uri[0] + "/la");
+            
+            SpotStatus spot = new SpotStatus(parkID, spotID, value.getContentValue());
+            
+            if (spot.isFree() == free)
+                return null;
+            
+            if (free) {
+                spot.free();
+            } else {
+                // Gotta get the current price at the time of the occupation
+                filters = new LabelsFactory().setParentID(parkID)
+                                             .setType("manifest")
+                                             .getFilters();
+                
+                uri = OM2M_NODE.discovery(parkID, filters);
+                
+                if (uri.length < 1 || uri.length > 1)
+                    throw new OM2MException("Bad discovery request generated", ErrorCode.OTHER);
+                
+                OM2MResource res = OM2M_NODE.get(uri[0] + "/la");
+                
+                final double price = getParkStatus(res).getPrice();
+                
+                spot.occupy(user, price);
+            }
+            
+            final String[] labels = new LabelsFactory().setParentID(spotID)
+                                                       .setParkID(parkID)
+                                                       .setSpotName(containerName)
+                                                       .setType("instance")
+                                                       .getLabels();
+            
+            OM2M_NODE.createContentInstance(spotID, spot.toString(), labels);
+            
+            return new SpotStatus(parkID, spotID, value.getContentValue());
         }
-        
-        if (free) {
-            spot.setFree();
-        } else {
-            spot.setOccupied(user);
-        }
-        
-        final String[] labels = new LabelsFactory().setParentID(spotID)
-                                                   .setParkID(parkID)
-                                                   .setSpotName(containerName)
-                                                   .setType("instance")
-                                                   .getLabels();
-        
-        OM2M_NODE.createContentInstance(spotID, spot.toString(), labels);
-        
-        return true;
     }
     
     public static String[] getDirectChildrenList(final String resourcePath)
@@ -344,18 +474,20 @@ public class ParksDataHandler {
         final String remoteName;
         final String remoteID;
         final String parkID;
+        final String type;
         final String[] labels;
         
         remoteAppID = original.getApplicationID();
         remoteName = original.getResourceName();
         remoteID = original.getResourceID();
         parkID = original.getResourceID();
+        type = LabelsFactory.getType(original.getLabels());
         
         labels = new LabelsFactory().setParentID(localParentID)
                                     .setParkID(parkID)
                                     .setRemoteID(remoteID)
                                     .setResourceName(remoteName)
-                                    .setType("park")
+                                    .setType(type)
                                     .getLabels();
         
         return OM2M_NODE.createApplicationEntity(localParentID, remoteAppID, remoteName, labels);
@@ -406,18 +538,29 @@ public class ParksDataHandler {
                         .toString();
         
         remoteLabels = original.getLabels();
-        
-        spotName = LabelsFactory.getSpotName(remoteLabels);
-        parkID = LabelsFactory.getParkID(get(localParentID).getLabels());
         type = LabelsFactory.getType(remoteLabels);
         
-        labels = new LabelsFactory().setParentID(localParentID)
-                                    .setParkID(parkID)
-                                    .setRemoteID(remoteID)
-                                    .setResourceName(remoteName)
-                                    .setSpotName(spotName)
-                                    .setType(type)
-                                    .getLabels();
+        parkID = LabelsFactory.getParkID(get(localParentID).getLabels());
+        
+        LabelsFactory factory = new LabelsFactory().setParentID(localParentID)
+                                                   .setParkID(parkID)
+                                                   .setRemoteID(remoteID)
+                                                   .setResourceName(remoteName);
+        
+        if (type.equals("payment-data")) {
+            final String username = LabelsFactory.getUsername(remoteLabels);
+            // TODO: get date (and set it when creating the original payment)
+            final Date date = LabelsFactory.getDate(remoteLabels);
+            labels = factory.setUsername(username)
+                            .setType(type)
+                            .setDate(date)
+                            .getLabels();
+        } else {
+            spotName = LabelsFactory.getSpotName(remoteLabels);
+            labels = factory.setSpotName(spotName)
+                            .setType(type)
+                            .getLabels();
+        }
         
         return OM2M_NODE.createContentInstance(localParentID, remoteName, value, labels);
     }
@@ -474,6 +617,7 @@ public class ParksDataHandler {
         private String spotName;
         private String remoteID;
         private String username;
+        private Date date;
         
         public static String getParentFilter(String parentID) {
             return "pi" + SEP + parentID;
@@ -503,6 +647,10 @@ public class ParksDataHandler {
             return "user" + SEP + username;
         }
         
+        public static String getDateFilter(Date date) {
+            return "date" + SEP + DateConverter.fromDate(date).substring(0, 9) + "000000";
+        }
+        
         private static String getValue(String[] labels, String prefix) {
             for (String s : labels) {
                 if (s.startsWith(prefix)) {
@@ -529,6 +677,18 @@ public class ParksDataHandler {
             return getValue(labels, prefix);
         }
         
+        public static String getUsername(String[] labels) {
+            final String prefix = "user" + SEP;
+            return getValue(labels, prefix);
+        }
+        
+        public static Date getDate(String[] labels) {
+            final String prefix = "date" + SEP;
+            String dateString = getValue(labels, prefix);
+            
+            return DateConverter.fromString(dateString);
+        }
+        
         public LabelsFactory() {
             reset();
         }
@@ -540,6 +700,7 @@ public class ParksDataHandler {
             parkID = null;
             spotName = null;
             remoteID = null;
+            date = null;
             
             return this;
         }
@@ -579,6 +740,13 @@ public class ParksDataHandler {
             return this;
         }
         
+        public LabelsFactory setDate(Date startTime) {
+            this.date = startTime;
+            return this;
+        }
+
+
+        
         public String[] getLabels() {
             ArrayList<String> labels = new ArrayList<>();
             
@@ -606,6 +774,10 @@ public class ParksDataHandler {
             
             if (username != null) {
                 labels.add(getUsernameFilter(username));
+            }
+            
+            if (date != null) {
+                labels.add(getDateFilter(date));
             }
             
             return labels.toArray(new String[labels.size()]);
@@ -759,3 +931,5 @@ public class ParksDataHandler {
     }
     
 }
+
+// TODO: a way to get park id from name

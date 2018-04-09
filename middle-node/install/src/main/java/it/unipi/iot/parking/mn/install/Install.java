@@ -1,21 +1,30 @@
 package it.unipi.iot.parking.mn.install;
 
+import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 
 import it.unipi.iot.parking.AppConfig;
 import it.unipi.iot.parking.ParkConfig;
 import it.unipi.iot.parking.ParksDataHandler;
+import it.unipi.iot.parking.om2m.OM2MException;
 
 public class Install {
     public static void main(String[] args) throws TimeoutException {
         try {
-            for (final ParkConfig p : AppConfig.PARKS) {
-                ParksDataHandler.createPark(p);
-            }
-        } catch (Exception e) {
+            ParksDataHandler.initMN();
+        } catch (OM2MException e) {
         }
-        /*
+        
+        for (final ParkConfig p : AppConfig.PARKS) {
+            try {
+                ParksDataHandler.createPark(p);
+            } catch (OM2MException e) {
+            }
+        }
+        
+        
         // TODO: remove, this is a test of the actual behavior of the parks and spots
+        
         @SuppressWarnings("resource")
         Scanner in = new Scanner(System.in);
         
@@ -33,11 +42,14 @@ public class Install {
             if (ParksDataHandler.freeSpot(parkID, index)) {
                 System.out.println("Spot has been freed!");
             } else {
-                ParksDataHandler.occupySpot(parkID, index, "gabriele");
-                System.out.println("Spot has been occupied!");
+                if (ParksDataHandler.payForSpot(parkID, index, "gabriele", "12345")) {
+                    System.out.println("Spot has been occupied!");
+                } else {
+                    System.out.println("Unable to occupy spot!");
+                }
             }
         }
-        */
+        
         /*
          * // TODO: delete the following code, needed only to test discoveries of data
          * String[] parks = ParksDataHandler.getAllParksList();
