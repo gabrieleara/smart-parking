@@ -271,7 +271,7 @@ public class ParksDataHandler {
         // Price is hourly, but you pay for real minutes
         double cost = oldStatus.getPrice() * ((double) minutesElapsed) / 60;
         
-        cost = Math.floor(cost*100)/100;
+        cost = Math.floor(cost * 100) / 100;
         
         PaymentData payment = new PaymentData(cost, startTime, endTime);
         
@@ -617,7 +617,7 @@ public class ParksDataHandler {
         private String spotName;
         private String remoteID;
         private String username;
-        private Date date;
+        private Date   date;
         
         public static String getParentFilter(String parentID) {
             return "pi" + SEP + parentID;
@@ -648,7 +648,9 @@ public class ParksDataHandler {
         }
         
         public static String getDateFilter(Date date) {
-            return "date" + SEP + DateConverter.fromDate(date).substring(0, 9) + "000000";
+            return "date" + SEP + DateConverter.fromDate(date)
+                                               .substring(0, 9)
+                    + "000000";
         }
         
         private static String getValue(String[] labels, String prefix) {
@@ -744,8 +746,6 @@ public class ParksDataHandler {
             this.date = startTime;
             return this;
         }
-
-
         
         public String[] getLabels() {
             ArrayList<String> labels = new ArrayList<>();
@@ -928,6 +928,28 @@ public class ParksDataHandler {
         }
         
         return null; // Login failed
+    }
+    
+    public static PaymentData[] getPayments(String username, Date date)
+            throws OM2MException, TimeoutException {
+        // Discovery to get all urils with username and date and type payment-data
+        String[] filters = new LabelsFactory().setUsername(username)
+                                              .setDate(date)
+                                              .setType("payment-data")
+                                              .getFilters();
+        
+        String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        PaymentData[] payments = new PaymentData[uril.length];
+        
+        for (int i = 0; i < uril.length; ++i) {
+            // Get payment data
+            ContentInstance content = (ContentInstance) OM2M_NODE.get(uril[i]);
+            
+            payments[i] = new PaymentData(content.getContentValue());
+        }
+        
+        return payments;
     }
     
 }
