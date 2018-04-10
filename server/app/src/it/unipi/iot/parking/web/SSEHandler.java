@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.servlet.AsyncContext;
@@ -20,6 +21,7 @@ import org.json.JSONObject;
 import it.unipi.iot.parking.ParksDataHandler;
 import it.unipi.iot.parking.data.ParkStatus;
 import it.unipi.iot.parking.data.SpotStatus;
+import it.unipi.iot.parking.om2m.OM2MException;
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 import it.unipi.iot.parking.util.OM2MObservable;
 import it.unipi.iot.parking.util.OM2MObservable.Observer;
@@ -72,8 +74,17 @@ public class SSEHandler {
         public void run() {
             if (ParksDataHandler.isParkStatusUpdate(resource))
                 deliverParkUpdate();
-            else if (ParksDataHandler.isSpotStatusUpdate(resource))
+            else if (ParksDataHandler.isSpotStatusUpdate(resource)) {
                 deliverSpotUpdate();
+                
+                SpotStatus spot = ParksDataHandler.getSpotStatus(resource);
+                try {
+                    int sign = spot.isFree() ? -1 : +1;
+                    ParksDataHandler.updatePrice(spot.getParkID(), sign);
+                } catch (OM2MException | TimeoutException e) {
+                    // TODO: do something?
+                }       
+            }
             
         }
         

@@ -183,9 +183,10 @@ public class ParksDataHandler {
         return parkIDs;
     }
     
-    public static ParkStatus getParkStatus(String parkID) throws OM2MException, TimeoutException {
-        String[] filters;
-        String[] uril;
+    public static ParkStatus getEmptyParkStatus(String parkID)
+            throws OM2MException, TimeoutException {
+        final String[] filters;
+        final String[] uril;
         final ParkStatus parkStatus;
         
         filters = new LabelsFactory().setType("manifest")
@@ -200,6 +201,16 @@ public class ParksDataHandler {
         ContentInstance status = (ContentInstance) OM2M_NODE.get(uril[0] + "/la");
         
         parkStatus = new ParkStatus(parkID, status.getContentValue());
+        
+        return parkStatus;
+    }
+    
+    public static ParkStatus getParkStatus(String parkID) throws OM2MException, TimeoutException {
+        final String[] filters;
+        final String[] uril;
+        final ParkStatus parkStatus;
+        
+        parkStatus = getEmptyParkStatus(parkID);
         parkStatus.setAvailable(true); // TODO: implement it
         
         // Get list of spots and add each one to a JSONArray
@@ -684,6 +695,11 @@ public class ParksDataHandler {
             return getValue(labels, prefix);
         }
         
+        public static String getRemote(String[] labels) {
+            final String prefix = "rmtid" + SEP;
+            return getValue(labels, prefix);
+        }
+        
         public static Date getDate(String[] labels) {
             final String prefix = "date" + SEP;
             String dateString = getValue(labels, prefix);
@@ -950,6 +966,50 @@ public class ParksDataHandler {
         }
         
         return payments;
+    }
+    
+    public static void updatePrice(String parkID, int sign) throws OM2MException, TimeoutException {
+        // TODO: test this
+        
+        // Get the remote park object
+        final String[] filters;
+        final String[] uril;
+        
+        OM2MResource localPark = OM2M_NODE.get(parkID);
+        
+        final String remoteParkID = LabelsFactory.getRemote(localPark.getLabels());
+        
+        // Now that I have the remote park id, I want to modify its manifest, first I
+        // get its manifest data
+        
+        filters = new LabelsFactory().setType("manifest")
+                                     .setParkID(remoteParkID)
+                                     .getFilters();
+        
+        uril = OM2M_NODE.discovery(remoteParkID, filters);
+        
+        if (uril.length > 1 || uril.length < 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        // Now I have the manifest URI, let's get its data
+        ContentInstance status = (ContentInstance) OM2M_NODE.get(uril[0] + "/la");
+        JSONObject value = status.getContentValue();
+        
+        double price = value.getDouble("price");
+        int spotsN = value.getInt("spotsN");
+        
+        // The value may change by only 50 cents at most
+        price += sign * (0.5 / spotsN);
+        
+        price = Math.floor(price * 100) / 100;
+        
+        value.put("price", price);
+        
+        // Now I gotta write back the value to a new ContentInstance
+        
+        OM2M_NODE.createContentInstance(uril[0], value.toString(), status.getLabels());
+        
+        // Done
     }
     
 }

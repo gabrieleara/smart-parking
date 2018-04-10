@@ -20,7 +20,8 @@
 					"address": "Largo Lucio Lazzarino - 56122 Pisa PI",
 					"price": 1.2,
 					"openT": "08:00",
-					"closeT": "20:00"
+					"closeT": "20:00",
+					"spotsN"	:	3
 				},
 				{ "lat": "43.7207555", "lon": "10.389442", "free": true, "user": null},
 				{ "lat": "43.720641", "lon": "10.389852", "free": true, "user": null},
@@ -39,7 +40,8 @@
 					"address": "Via Giunta Pisano, 7 - 56122 Pisa PI",
 					"price": 1.8,
 					"openT": "12:00",
-					"closeT": "20:00"
+					"closeT": "20:00",
+					"spotsN"	:	2
 				},
 				{ "lat": "43.721576", "lon": "10.390161", "free": true, "user": null},
 				{ "lat": "43.721665", "lon": "10.389869", "free": false, "user": 15}
@@ -57,7 +59,8 @@
 					"closeT"	: 	"24:00",
 					"lon"		: 	"10.325283900000045",
 					"openT"		: 	"12:00",
-					"lat"		: 	"43.53911887290961"
+					"lat"		: 	"43.53911887290961",
+					"spotsN"	:	3
 				},
 				{ 
 						"lon"	: 	"10.325383900000045", 
