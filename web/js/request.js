@@ -37,22 +37,18 @@ class Request {
 				callback();
 			}.bind(this), false);
 		this.source.addEventListener("parkUpdate", function(event) {
-				console.log(JSON.parse(event.data));
-				// TODO: implement this
+				var update = JSON.parse(event.data)
+				RepParser.parseParkUpdating(this.reply, update);
+				console.log(update);
+				callback();
 			}.bind(this), false);
 		this.source.addEventListener("spotUpdate", function(event) {
-				console.log(JSON.parse(event.data));
-				// TODO: implement this
+				var update = JSON.parse(event.data)
+				RepParser.parseSpotUpdating(this.reply, update);
+				console.log(update);
+				callback();
 			}.bind(this), false);
-
-		/*
-		this.source.onmessage = function(event) {
-			console.log(event);
-			this.reply = JSON.parse(event.data);
-			console.log(this.reply);
-			callback(); 
-		}.bind(this);
-		*/
+			
 	}
 
 	// Cancel server subscription (if any)
@@ -86,6 +82,11 @@ class Request {
 	getParksInfo() {
 		return RepParser.parseParksInfo(this.reply);
 	}
+
+	// Get filtered park general info and return it
+	getFilteredParksInfo(newMapBounds) {
+		return RepParser.filterParseParksInfo(this.reply, newMapBounds)
+	}
 	
 	// Get park locations info
 	getParksLocations() {
@@ -117,11 +118,24 @@ class Request {
 	// ---------------------------------------
 
 	// Serialize into string a map bound object
+	/*
 	serialize(mapB) {
 		return "?minLat="+mapB.minLat +
 				"&minLon="+mapB.minLon +
 				"&maxLat="+mapB.maxLat +
 				"&maxLon="+mapB.maxLon;
+	}*/
+
+	serialize(mapB) {
+		var minLat = mapB.getSouthWest().lat();
+		var minLon = mapB.getSouthWest().lng();
+		var maxLat = mapB.getNorthEast().lat();
+		var maxLon = mapB.getNorthEast().lng();
+		
+		return "?minLat="+minLat +
+				"&minLon="+minLon +
+				"&maxLat="+maxLat +
+				"&maxLon="+maxLon;
 	}
 
 	// Perform a sync ajax GET query and return the result

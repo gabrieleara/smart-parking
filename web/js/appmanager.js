@@ -51,9 +51,10 @@ function createRequestHandler() {
 }
 
 function makeRequest() {
-    console.log("Richiesta inviata.");
+    var mapBounds = calculateBounds(0.3);
+
     request.cancelSubscription();
-    request.makeSubscription(map.getBounds(), manageUpdate);
+    request.makeSubscription(mapBounds, manageUpdate);
 }
 
 // -----------------------------
@@ -62,9 +63,8 @@ function makeRequest() {
 
 // Manage receive information from server
 function manageUpdate() {
-    
-    // parse up-to-date info coming from server
-    var parksInfo = request.getParksInfo();
+    var mapBounds = calculateBounds(0.03);    
+    var parksInfo = request.getFilteredParksInfo(mapBounds);
 
     sidebar.buildItemsList(parksInfo, open);
     sidebar.buildDetailsList(parksInfo, close);
@@ -100,9 +100,14 @@ function updateSpots() {
     var parksLoc = request.getParksLocations();
     var spotsLoc = request.getSpotsLocations(parkId);
 
-    sidebar.appendDetailsList(listIndex);
     map.mapAddMarkers(parksLoc, open);
-    map.mapAddSpot(spotsLoc);
+
+    if(listIndex == -1) {
+        close();
+    } else {
+        sidebar.appendDetailsList(listIndex);
+        map.mapAddSpot(spotsLoc);
+    }
 }
 
 // Hide park details and remove spot marker from map
@@ -125,4 +130,20 @@ function open(id) {
 function showMapHideCover() {
     $('#main-container').fadeOut(400);
     $('#map-container').fadeIn(400);
+}
+
+// Create an onject filled with map dimension and return it
+function getMapDimension() {
+    return {
+        width: $('#map').width(),
+        height: $('#map').height()
+    }
+}
+
+// Calculate map bounds starting from map dimension
+function calculateBounds(ratio) {
+    var mapDimension = getMapDimension();
+    var padWidth = mapDimension.width * (-ratio);
+    var padHeight = mapDimension.height * (-ratio);
+    return map.getPaddedBounds(padHeight, padHeight, padWidth, padWidth);
 }

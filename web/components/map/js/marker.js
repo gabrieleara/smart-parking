@@ -34,14 +34,9 @@ class Marker {
     }
 
     // Delete the specified marker
-    resetMarker(id) {
-        for(var i = 0; i < this.markers.length; i++) {
-            if(this.markers[i].id == id) {
-                this.markers[i].setMap(null);
-                this.markers.splice(i, 1);
-                return;
-            }
-        }
+    resetMarker(index) {
+        this.markers[index].setMap(null);
+        this.markers.splice(index, 1);
     }
 
     // Delete all markers on the map
@@ -73,12 +68,11 @@ class Marker {
 
     // Update a set of markers
     updateParkMarkers(locations, clickCallback) {
-
         // check for new markers and draw it
-        for(var i = 0; i < locations.length; i++) {
+        for(var i = locations.length-1; i >= 0; i--) {
             var alreadyIn = false;
 
-            for(var j = 0; j < this.markers.length && !alreadyIn; j++)         
+            for(var j = this.markers.length-1; j >= 0 && !alreadyIn; j--)         
                 if(locations[i].id == this.markers[j].id)
                     alreadyIn = true;
 
@@ -87,15 +81,15 @@ class Marker {
         }
 
         // check for deleted markers and hide it
-        for(var i = 0; i < this.markers.length; i++) {
+        for(var i = this.markers.length-1; i >= 0; i--) {
             var noMoreIn = true;
 
-            for(var j = 0; j < locations.length && noMoreIn; j++)         
+            for(var j = locations.length-1; j >= 0 && noMoreIn; j--)         
                 if(this.markers[i].id == locations[j].id)
                     noMoreIn = false;
 
             if(noMoreIn)
-                this.resetMarker(this.markers[i].id);
+                this.resetMarker(i);
         }
     }
 
@@ -118,41 +112,48 @@ class Marker {
             this.createSpotMarker(spotlocations[i]);
     }
 
+    // Change dinamically spot icon and update the state
+    changeSpotIcon(index) {
+        this.spots[index].free = !this.spots[index].free;
+
+        if(this.spots[index].free)
+            this.spots[index].setIcon("components/map/img/pin-green.svg");
+        else
+            this.spots[index].setIcon("components/map/img/pin-red.svg");
+    }
+
     updateSpotMarkers(spotlocations) {
-        // Check for new spots and draw it
-        for(var i = 0; i < spotlocations.length; i++) {
-            var alreadyIn = false;
+        // check for new spots and draw it
+        for(var i = spotlocations.length-1; i >= 0; i--) {
+            var alreadyIn = -1;
 
-            for(var j = 0; j < this.spots.length && !alreadyIn; j++)         
+            for(var j = this.spots.length-1; j >= 0 && alreadyIn < 0; j--)         
                 if(spotlocations[i].id == this.spots[j].id)
-                    alreadyIn = true;
-
-            if(!alreadyIn)
+                    alreadyIn = j;
+                
+            if(alreadyIn >= 0 && spotlocations[i].free != this.spots[alreadyIn].free)
+                this.changeSpotIcon(alreadyIn);
+            else if(alreadyIn == -1)
                 this.createSpotMarker(spotlocations[i]);
         }
 
-        // Check for deleted markers and hide it
-        for(var i = 0; i < this.spots.length; i++) {
+        // check for deleted markers and hide it
+        for(var i = this.spots.length-1; i >= 0; i--) {
             var noMoreIn = true;
 
-            for(var j = 0; j < spotlocations.length && noMoreIn; j++)         
+            for(var j = spotlocations.length-1; j >= 0 && noMoreIn; j--)         
                 if(this.spots[i].id == spotlocations[j].id)
                     noMoreIn = false;
 
             if(noMoreIn)
-                this.resetMarker(this.spots[i].id);
+                this.removeSpotMarker(i);
         }
     }
 
     // Remove one spot marker
-    removeSpotMarker(id) {
-        for(var i = 0; i < this.spots.length; i++) {
-            if(this.spots[i].id == id) {
-                this.spots[i].setMap(null);
-                this.spots.splice(i, 1);
-                return;
-            }
-        }
+    removeSpotMarker(index) {
+        this.spots[index].setMap(null);
+        this.spots.splice(index, 1);
     }
 
     // Remove spot markers

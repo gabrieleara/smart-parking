@@ -141,7 +141,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" onclick="submit_login();" class="btn btn-primary">Log in</button>
+                    <button type="button" onclick="submitLogin();" class="btn btn-primary">Log in</button>
                 </div>
             </div>
         </div>
@@ -168,24 +168,29 @@
                     <form id="form-signup" method="post" enctype="multipart/form-data" data-toggle="validator">
                         <div class="form-group">
                             <label for="email" class="form-control-label">Email:</label>
-                            <input type="email" class="form-control" name="email" id="signup-email" data-vindicate="required|format:email|active">
+                            <input type="email" class="form-control" name="email" id="signup-email" required>
                             <small class="form-control-feedback"></small>
                         </div>
                         <div class="form-group">
                             <label for="username" class="form-control-label">Username:</label>
-                            <input type="text" class="form-control" name="username" id="signup-username" data-vindicate="required|format:alphanumeric|active">
+                            <input type="text" class="form-control" name="username" id="signup-username" required>
                             <small class="form-control-feedback"></small>
                         </div>
                         <div class="form-group">
                             <label for="password" class="form-control-label">Password:</label>
-                            <input type="password" class="form-control" name="password" id="signup-password" data-vindicate="required|active">
+                            <input type="password" class="form-control" name="password" id="signup-password" required>
+                            <small class="form-control-feedback"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="credit" class="form-control-label">Credit card:</label>
+                            <input type="text" class="form-control" name="credit" id="signup-credit" required>
                             <small class="form-control-feedback"></small>
                         </div>         
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" onclick="submit_signup();" class="btn btn-primary">Sign up</button>
+                    <button type="button" onclick="submitSignup();" class="btn btn-primary">Sign up</button>
                 </div>
             </div>
         </div>
