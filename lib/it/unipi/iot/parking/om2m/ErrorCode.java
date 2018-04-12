@@ -20,7 +20,8 @@ public enum ErrorCode {
         case 0:
             return MISSING_RESPONSE_OPT;
         default:
-            return OTHER;//throw new RuntimeException("Missing errorcode for the following webcode: " + webCode);
+            return OTHER;// throw new RuntimeException("Missing errorcode for the following webcode:
+                         // " + webCode);
         }
         
     }

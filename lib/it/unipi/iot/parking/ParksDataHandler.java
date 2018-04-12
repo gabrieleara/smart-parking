@@ -99,7 +99,12 @@ public class ParksDataHandler {
         OM2M_NODE.createContainer(paymentsID, conf.name, plabels);
         
         for (int index = 0; index < conf.spots.length; ++index) {
-            createSpot(park.getResourceID(), conf.spots[index], index);
+            try {
+                createSpot(park.getResourceID(), conf.spots[index], index);
+            } catch (OM2MException e) {
+                if (e.getCode() != ErrorCode.NAME_ALREADY_PRESENT)
+                    throw e;
+            }
         }
         
         return park;
@@ -137,8 +142,10 @@ public class ParksDataHandler {
         
         if (index == 0)
             factory.setType("manifest-data");
-        else
-            factory.setType("instance");
+        else {
+            factory.setType("instance")
+                   .setFirst(true);
+        }
         
         labels = factory.getLabels();
         
@@ -243,7 +250,7 @@ public class ParksDataHandler {
     }
     
     public static boolean isSpotStatusUpdate(OM2MResource resource) {
-        return checkType(resource, "instance");
+        return checkType(resource, "instance") && !LabelsFactory.isFirst(resource.getLabels());
     }
     
     public static ParkStatus getParkDataFromURI(String parkPath)
@@ -368,7 +375,7 @@ public class ParksDataHandler {
                                               .setResourceName(containerName)
                                               .getFilters();
         
-        String[] uri = OM2M_NODE.discovery(parkID, filters);
+        String[] uri = OM2M_NODE.discovery(AppConfig.CSE_ID, filters); // parkID
         
         if (uri.length > 1)
             throw new OM2MException(
@@ -567,8 +574,10 @@ public class ParksDataHandler {
                             .setDate(date)
                             .getLabels();
         } else {
+            boolean firstInstance = LabelsFactory.isFirst(remoteLabels);
             spotName = LabelsFactory.getSpotName(remoteLabels);
             labels = factory.setSpotName(spotName)
+                            .setFirst(firstInstance)
                             .setType(type)
                             .getLabels();
         }
@@ -621,14 +630,15 @@ public class ParksDataHandler {
     private static class LabelsFactory {
         private static final String SEP = ":";
         
-        private String parentID;
-        private String resourceName;
-        private String type;
-        private String parkID;
-        private String spotName;
-        private String remoteID;
-        private String username;
-        private Date   date;
+        private String  parentID;
+        private String  resourceName;
+        private String  type;
+        private String  parkID;
+        private String  spotName;
+        private String  remoteID;
+        private String  username;
+        private Date    date;
+        private boolean first;
         
         public static String getParentFilter(String parentID) {
             return "pi" + SEP + parentID;
@@ -656,6 +666,10 @@ public class ParksDataHandler {
         
         public static String getUsernameFilter(String username) {
             return "user" + SEP + username;
+        }
+        
+        public static String getFirstFilter(boolean first) {
+            return "first" + SEP + first;
         }
         
         public static String getDateFilter(Date date) {
@@ -695,6 +709,15 @@ public class ParksDataHandler {
             return getValue(labels, prefix);
         }
         
+        public static boolean isFirst(String[] labels) {
+            final String prefix = "first" + SEP;
+            try {
+                return Boolean.parseBoolean(getValue(labels, prefix));
+            } catch (RuntimeException e) {
+                return false;
+            }
+        }
+        
         public static String getRemote(String[] labels) {
             final String prefix = "rmtid" + SEP;
             return getValue(labels, prefix);
@@ -719,6 +742,7 @@ public class ParksDataHandler {
             spotName = null;
             remoteID = null;
             date = null;
+            first = false;
             
             return this;
         }
@@ -758,6 +782,11 @@ public class ParksDataHandler {
             return this;
         }
         
+        public LabelsFactory setFirst(boolean first) {
+            this.first = first;
+            return this;
+        }
+        
         public LabelsFactory setDate(Date startTime) {
             this.date = startTime;
             return this;
@@ -794,6 +823,10 @@ public class ParksDataHandler {
             
             if (date != null) {
                 labels.add(getDateFilter(date));
+            }
+            
+            if (first) {
+                labels.add(getFirstFilter(first));
             }
             
             return labels.toArray(new String[labels.size()]);
@@ -1010,6 +1043,19 @@ public class ParksDataHandler {
         OM2M_NODE.createContentInstance(uril[0], value.toString(), status.getLabels());
         
         // Done
+    }
+    
+    public static String getParkID(String name) throws OM2MException, TimeoutException {
+        final String[] filters = new LabelsFactory().setType("park")
+                                                    .setResourceName(name)
+                                                    .getFilters();
+        final String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length != 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        return getResourceIDFromPath(uril[0]);
+        
     }
     
 }

@@ -1,0 +1,32 @@
+{
+	"host_address": "172.20.10.3",
+	"port_number": "5684",
+	"cse_id": "parking-pisa-pisano",
+	"credentials": "admin:admin",
+	"cse_name": "parking-pisa-via-pisano",
+
+	"node_type": "MN",
+	"in_id": "parking",
+	"parks_data": [
+		{
+			"app_id": "lazzarino-api",
+			"name":"lazzarino",
+			"netip":"fd00::c30c:0:0:",
+			"spots": [
+				{
+					"lat": "43.720660",
+					"lon": "10.389560",
+					"name": "Park Lucio Lazzarino",
+					"address": "Largo Lucio Lazzarino - 56122 Pisa PI",
+					"price": 1.2,
+					"openT": "08:00",
+					"closeT": "20:00",
+					"spotsN": 3
+				},
+				{ "lat": "43.7207555", "lon": "10.389442", "free": true, "user": null},
+				{ "lat": "43.720641", "lon": "10.389852", "free": true, "user": null},
+				{ "lat": "43.720708", "lon": "10.389630", "free": true, "user": null}
+			]
+		}
+	]
+}

@@ -10,7 +10,7 @@ public class OM2MException extends RuntimeException {
     private static final long serialVersionUID = 1102877999050513127L;
     
     private ErrorCode code;
-
+    
     public OM2MException(ErrorCode code) {
         super(code.toString());
         this.code = code;
@@ -34,6 +34,5 @@ public class OM2MException extends RuntimeException {
     public ErrorCode getCode() {
         return this.code;
     }
-    
     
 }

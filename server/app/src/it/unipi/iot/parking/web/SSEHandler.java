@@ -28,9 +28,9 @@ import it.unipi.iot.parking.util.OM2MObservable.Observer;
 
 public class SSEHandler {
     
-    private static final long TIME_SECOND      = 1000;
-    private static final long RETRY_INTERVAL   = 30 * TIME_SECOND;
-    private static final long TIMEOUT_INTERVAL = 3 * RETRY_INTERVAL;
+    private static final long TIME_SECOND      = 1000L;
+    private static final long RETRY_INTERVAL   = 3 * TIME_SECOND;
+    private static final long TIMEOUT_INTERVAL = 30 * RETRY_INTERVAL;
     
     private static final String EVENT_NEW_PARK_LIST = "newParkList";
     private static final String EVENT_PARK_UPDATE   = "parkUpdate";
@@ -72,6 +72,8 @@ public class SSEHandler {
         
         @Override
         public void run() {
+            // Ok, problem is the first time we get the status of a spot, we also update
+            // (wrongly) the price of a park
             if (ParksDataHandler.isParkStatusUpdate(resource))
                 deliverParkUpdate();
             else if (ParksDataHandler.isSpotStatusUpdate(resource)) {
@@ -83,7 +85,7 @@ public class SSEHandler {
                     ParksDataHandler.updatePrice(spot.getParkID(), sign);
                 } catch (OM2MException | TimeoutException e) {
                     // TODO: do something?
-                }       
+                }
             }
             
         }

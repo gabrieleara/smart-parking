@@ -1,15 +1,171 @@
 package it.unipi.iot.parking.mn.app;
 
-import it.unipi.iot.parking.om2m.OM2M;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+
+import org.eclipse.californium.core.CoapClient;
+import org.eclipse.californium.core.CoapHandler;
+import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.Request;
+import org.json.JSONObject;
+
+import it.unipi.iot.parking.AppConfig;
+import it.unipi.iot.parking.ParkConfig;
+import it.unipi.iot.parking.ParksDataHandler;
+import it.unipi.iot.parking.om2m.ErrorCode;
+import it.unipi.iot.parking.om2m.OM2MException;
 
 public class Application {
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		OM2M om2m = OM2M.init("localhost", "5684", "admin:admin");
-		
-		System.out.println(om2m.createContentInstance("/parking-pisa-pisano/cnt-186642875", "{ \"roba\": 10 }").toJSONObject().toString());
-		
-		//om2m.createContent("parking-pisa-pisano/cnt-347118771", "{roba}");
-	}
+    
+    public static String getSpotIP(String netIP, int index) {
+        return netIP + Integer.toHexString(index + 1);
+    }
+    
+    static ExecutorService executor = Executors.newSingleThreadExecutor();
+    
+    static class OccupySpotRunnable implements Runnable {
+        final ParkConfig park;
+        final int        index;
+        final String     user;
+        final String     credit;
+        
+        public OccupySpotRunnable(ParkConfig park, int index, String user, String credit) {
+            super();
+            this.park = park;
+            this.index = index;
+            this.user = user;
+            this.credit = credit;
+        }
+        
+        @Override
+        public void run() {
+            boolean success;
+            
+            try {
+                success = ParksDataHandler.payForSpot(park.parkID, index, user, credit);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            
+            // TODO: a few prints
+            
+            if (!success) {
+                new CoapClient().advanced(Request.newPost()
+                                                 .setURI("coap://[" + getSpotIP(park.netIP, index)
+                                                         + "]:5683/park_spot")
+                                                 .setPayload("free=1"));
+                return;
+            }
+            
+            new CoapClient().advanced(Request.newPost()
+                                             .setURI("coap://[" + getSpotIP(park.netIP, index)
+                                                     + "]:5683/park_spot")
+                                             .setPayload("free=0"));
+        }
+        
+    }
+    
+    static class FreeSpotRunnable implements Runnable {
+        final String parkID;
+        final int    index;
+        
+        public FreeSpotRunnable(String parkID, int index) {
+            this.parkID = parkID;
+            this.index = index;
+        }
+        
+        @Override
+        public void run() {
+            boolean success;
+            
+            try {
+                success = ParksDataHandler.freeSpot(parkID, index);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            
+            // TODO: a few prints
+            
+            if (!success)
+                return;
+            
+            return;
+        }
+        
+    }
+    
+    static class SpotCoapHandler implements CoapHandler {
+        final int        index;
+        final ParkConfig park;
+        
+        SpotCoapHandler(ParkConfig park, int index) {
+            this.index = index;
+            this.park = park;
+        }
+        
+        public void onLoad(CoapResponse response) {
+            // TODO: modify this content
+            JSONObject content = new JSONObject(response.getResponseText());
+            
+            boolean free = content.getBoolean("free");
+            String user = content.optString("user", null);
+            String credit = content.optString("credit", null);
+            
+            if (free == false)
+                return;
+            
+            if (user == null) {
+                executor.submit(new FreeSpotRunnable(park.parkID, index));
+                return;
+            }
+            
+            executor.submit(new OccupySpotRunnable(park, index, user, credit));
+        }
+        
+        public void onError() {
+            // TODO: nothing
+        }
+        
+    }
+    
+    public static void main(String[] args) throws OM2MException, TimeoutException {
+        try {
+            ParksDataHandler.initMN();
+        } catch (OM2MException e) {
+            if (e.getCode() != ErrorCode.NAME_ALREADY_PRESENT)
+                throw e;
+        }
+        
+        for (final ParkConfig p : AppConfig.PARKS) {
+            try {
+                p.parkID = ParksDataHandler.createPark(p)
+                                           .getResourceID();
+            } catch (OM2MException e) {
+                if (e.getCode() != ErrorCode.NAME_ALREADY_PRESENT)
+                    throw e;
+                else {
+                    p.parkID = ParksDataHandler.getParkID(p.name);
+                }
+            }
+        }
+        
+        // Now, for each park and for each spot we need to establish an Observing
+        // relation
+        for (final ParkConfig p : AppConfig.PARKS) {
+            String netIP = p.netIP;
+            
+            for (int i = 1; i <= p.spotsNumber; ++i) {
+                String spotIP = getSpotIP(netIP, i);
+                
+                CoapClient client = new CoapClient("coap://[" + spotIP + "]:5683/park_spot");
+                
+                /* CoapObserveRelation relation = */
+                client.observe(new SpotCoapHandler(p, i));
+            }
+        }
+        
+        while (true)
+            ;
+    }
 }

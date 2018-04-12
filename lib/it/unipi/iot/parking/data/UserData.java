@@ -11,7 +11,7 @@ public class UserData {
     private final String id;
     private final String username;
     private final String email;
-    //private final String password;
+    // private final String password;
     private final String credit;
     
     public UserData(JSONObject data) {
@@ -42,10 +42,8 @@ public class UserData {
     }
     
     /*
-    public String getPassword() {
-        return password;
-    }
-    */
+     * public String getPassword() { return password; }
+     */
     
     public String getCredit() {
         return credit;

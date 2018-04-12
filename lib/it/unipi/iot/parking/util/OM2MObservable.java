@@ -21,10 +21,6 @@
 
 package it.unipi.iot.parking.util;
 
-
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unipi.iot.parking.om2m.data.OM2MResource;
 
 /**

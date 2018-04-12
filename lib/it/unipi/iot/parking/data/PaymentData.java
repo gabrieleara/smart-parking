@@ -7,12 +7,12 @@ import org.json.JSONObject;
 import it.unipi.iot.parking.util.DateConverter;
 
 public class PaymentData {
-    // private final static String STRING_ID         = "id";
+    // private final static String STRING_ID = "id";
     private final static String STRING_COST       = "cost";
     private final static String STRING_START_TIME = "startT";
     private final static String STRING_END_TIME   = "endT";
     
-    //private final String id;
+    // private final String id;
     private final double cost;
     private final Date   startTime;
     private final Date   endTime;
@@ -44,7 +44,7 @@ public class PaymentData {
     public JSONObject toJSONObject() {
         final JSONObject obj;
         
-        obj = new JSONObject()//.put(STRING_ID, this.id)
+        obj = new JSONObject()// .put(STRING_ID, this.id)
                               .put(STRING_COST, this.cost)
                               .put(STRING_START_TIME, DateConverter.fromDate(this.startTime))
                               .put(STRING_END_TIME, DateConverter.fromDate(this.endTime));

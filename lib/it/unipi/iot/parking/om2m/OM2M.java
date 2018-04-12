@@ -43,10 +43,9 @@ public class OM2M {
      */
     private static final Logger LOGGER = Logger.getLogger(OM2M.class.getName());
     
-    static { 
+    static {
         LOGGER.setLevel(Level.OFF);
     }
-
     
     /*
      * -----------------------------------------------------------------------------
@@ -271,22 +270,23 @@ public class OM2M {
      * @throws OM2MException
      * 
      */
-    /*public OM2MResource createCopy(final String parentID, final OM2MResource original)
-            throws TimeoutException, OM2MException {
-        return createCopy(parentID, original, new String[] {});
-    }*/
     /*
-    public OM2MResource createCopy(final String parentID, final OM2MResource original,
-            final String[] labels) throws TimeoutException, OM2MException {
-        final String[] copyParameters = original.getCopyParameters();
-        final String[] parameters = new String[copyParameters.length + labels.length];
-        
-        System.arraycopy(copyParameters, 0, parameters, 0, copyParameters.length);
-        System.arraycopy(labels, 0, parameters, copyParameters.length, labels.length);
-        
-        return create(parentID, original.getResourceType(), parameters);
-    }
-    */
+     * public OM2MResource createCopy(final String parentID, final OM2MResource
+     * original) throws TimeoutException, OM2MException { return
+     * createCopy(parentID, original, new String[] {}); }
+     */
+    /*
+     * public OM2MResource createCopy(final String parentID, final OM2MResource
+     * original, final String[] labels) throws TimeoutException, OM2MException {
+     * final String[] copyParameters = original.getCopyParameters(); final String[]
+     * parameters = new String[copyParameters.length + labels.length];
+     * 
+     * System.arraycopy(copyParameters, 0, parameters, 0, copyParameters.length);
+     * System.arraycopy(labels, 0, parameters, copyParameters.length,
+     * labels.length);
+     * 
+     * return create(parentID, original.getResourceType(), parameters); }
+     */
     /**
      * Performs a remote request for the resource identified by the given ID.
      * 
