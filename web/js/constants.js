@@ -21,7 +21,8 @@ const STATE = Object.freeze({
 const SUB_RES = "servlets/parks";
 const PARK_RES = "servlets/parks";
 const LOGIN_RES = "servlets/login";
-const SIGNUP_RES = "servlets/signup";
+const LOGOUT_RES = "servlets/logout";
+const SIGNUP_RES = "servlets/register";
 
 // Google MAP API endpoint
 const GMAP_RES = "https://www.google.com/maps/dir/?api=1";

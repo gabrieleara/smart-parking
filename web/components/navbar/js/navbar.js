@@ -31,11 +31,11 @@ class Navbar {
     }
 
     showElement(id) {
-        $('#'+id).hide();
+        $('#btn-'+id).show();
     }
 
     hideElement(id) {
-        $('#'+id).show();
+        $('#btn-'+id).hide();
     }
 
     // -----------------------

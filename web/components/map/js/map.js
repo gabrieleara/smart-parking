@@ -70,7 +70,8 @@ class MyMap {
         this.marker.removeSpotMarkers();
     }
 
-    // Return map bounds
+    /*
+    // Return map bounds in custom format
     getBounds() {
         return {
             minLat : this.map.getBounds().getSouthWest().lat(),
@@ -78,6 +79,38 @@ class MyMap {
             maxLat : this.map.getBounds().getNorthEast().lat(),
             maxLon : this.map.getBounds().getNorthEast().lng(),
         }
+    }
+    */
+
+    getBounds() {
+        return this.map.getBounds();
+    }
+
+    // Calculate map bounds with custom padding
+    // See: https://stackoverflow.com/questions/34894732/add-padding-to-google-maps-bounds-contains
+    getPaddedBounds(npad, spad, epad, wpad) {
+        var SW = this.map.getBounds().getSouthWest();
+        var NE = this.map.getBounds().getNorthEast();
+        var topRight = this.map.getProjection().fromLatLngToPoint(NE);
+        var bottomLeft = this.map.getProjection().fromLatLngToPoint(SW);
+        var scale = Math.pow(2, this.map.getZoom());
+    
+        var SWtopoint = this.map.getProjection().fromLatLngToPoint(SW);
+        var SWpoint = new google.maps.Point(((SWtopoint.x - bottomLeft.x) * scale) + wpad, ((SWtopoint.y - topRight.y) * scale) - spad);
+        var SWworld = new google.maps.Point(SWpoint.x / scale + bottomLeft.x, SWpoint.y / scale + topRight.y);
+        var pt1 = this.map.getProjection().fromPointToLatLng(SWworld);
+    
+        var NEtopoint = this.map.getProjection().fromLatLngToPoint(NE);
+        var NEpoint = new google.maps.Point(((NEtopoint.x - bottomLeft.x) * scale) - epad, ((NEtopoint.y - topRight.y) * scale) + npad);
+        var NEworld = new google.maps.Point(NEpoint.x / scale + bottomLeft.x, NEpoint.y / scale + topRight.y);
+        var pt2 = this.map.getProjection().fromPointToLatLng(NEworld);
+    
+        return new google.maps.LatLngBounds(pt1, pt2);
+    }
+
+    // Return true if the point (lat, lon) is contained in the map bounds
+    contains(lat, lon) {
+        map.getBounds().contains({lat: lat, lng: lon});
     }
 
     // -----------------------------------------
@@ -111,6 +144,7 @@ class MyMap {
         this.map = new google.maps.Map(mapContainer, mapOptions);
     }
 
+    // Create the marker object and bind it to the current instance of the map
     initMarker() {
         this.marker = new Marker(this.map);
     }

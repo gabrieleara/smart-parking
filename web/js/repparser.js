@@ -17,6 +17,10 @@ class RepParser {
     //
     // ------------------------------------------
 
+    // ------------------------------------------
+    // PARSING NEW REPLY
+    // ------------------------------------------
+
 	// Parse object returned by the server and build a new one
 	static parseParksInfo(reply) {
 		var parks = [];
@@ -25,7 +29,12 @@ class RepParser {
             parks[i] = this.buildParkInfoObj(reply.parks[i]);
 
 		return parks;
-	}
+    }
+    
+    // Filter object returned by the server, parse it and build new one
+    static filterParseParksInfo(reply, newMapBounds) {
+        return this.parseParksInfo(this.filterReply(newMapBounds, reply));
+    }
 
 	// Parse object returned by the server and build one with geo information
 	static parseParksLocations(reply) {
@@ -63,6 +72,30 @@ class RepParser {
 		}
 		
 		return spots;
+    }
+
+    // ------------------------------------------
+    // PARSING UPDATE PACKETS
+    // ------------------------------------------
+
+    // Parse park update packet and update reply object
+    static parseParkUpdating(reply, update) {
+        for(var i = 0; i < reply.parks.length; i++) {
+            if(reply.parks[i].id == update.parkID) {
+                this.updateParkStatus(reply.parks[i], update.price);
+                return;
+            }
+        }
+    }
+
+    // Parse spot update packet and update reply object
+    static parseSpotUpdating(reply, update) {
+        for(var i = 0; i < reply.parks.length; i++) {
+            if(reply.parks[i].id == update.parkID) {
+                this.updateSpotStatus(reply.parks[i], update.id, update.free);
+                return;
+            }
+        }
     }
 
     // -----------------------------------------
@@ -116,9 +149,41 @@ class RepParser {
         };
     }
 
+    // Update park status with the one passed
+    static updateParkStatus(park, newPrice) {
+        park.price = newPrice;
+    }
+
+    // Update park status with the one passed
+    static updateSpotStatus(park, spotId, spotStatus) {
+        for(var i = 0; i < park.spots.length; i++) {
+            if(park.spots[i].id == spotId) {
+                park.spots[i].free = spotStatus;
+                return;
+            }
+        }
+    }
+
     // ---------------------------------------
 	// UTILITY
     // ---------------------------------------
+
+    // Return a new "reply" object after filtering using map bounds
+    static filterReply(mapBounds, reply) {
+        var filteredReply = { parks: [] };
+
+        for(var i = 0; i < reply.parks.length; i++)
+            if(this.mapContains(mapBounds, reply.parks[i].lat, reply.parks[i].lon))
+                filteredReply.parks.push(reply.parks[i]);
+
+        return filteredReply;
+    }
+
+    // Return true if the point (lat, lon) is contained in the map bounds
+    // See: https://developers.google.com/maps/documentation/javascript/reference/3/#LatLngBounds
+    static mapContains(mapBounds, lat, lon) {
+        return mapBounds.contains({lat: lat, lng: lon});        
+    }
 
 	// Take lat/lon and build Google MAP direction url
 	static dirUrlBuilder(lat, lon) {
