@@ -1029,12 +1029,11 @@ public class ParksDataHandler {
         JSONObject value = status.getContentValue();
         
         double price = value.getDouble("price");
-        int spotsN = value.getInt("spotsN");
+        // int spotsN = value.getInt("spotsN");
         
-        // The value may change by only 50 cents at most
-        price += sign * (0.5 / spotsN);
+        price += sign * 0.05; // Optionally: use the number of spots
         
-        price = Math.floor(price * 100) / 100;
+        price = Math.round(price * 100) / 100.;
         
         value.put("price", price);
         

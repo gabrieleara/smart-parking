@@ -42,19 +42,20 @@ public class Application {
         public void run() {
             boolean success;
             
+            System.out.println("Trying to occupy spot " + index + " of park " + park.name + "...");
+            
             try {
                 success = ParksDataHandler.payForSpot(park.parkID, index, user, credit);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             
-            // TODO: a few prints
-            
             if (!success) {
                 new CoapClient().advanced(Request.newPost()
                                                  .setURI("coap://[" + getSpotIP(park.netIP, index)
                                                          + "]:5683/park_spot")
                                                  .setPayload("free=1"));
+                System.out.println("Spot " + index + " of park " + park.name + " was already occupied!");
                 return;
             }
             
@@ -62,16 +63,17 @@ public class Application {
                                              .setURI("coap://[" + getSpotIP(park.netIP, index)
                                                      + "]:5683/park_spot")
                                              .setPayload("free=0"));
+            System.out.println("Spot " + index + " of park " + park.name + " occupied successfully!");
         }
         
     }
     
     static class FreeSpotRunnable implements Runnable {
-        final String parkID;
+        final ParkConfig park;
         final int    index;
         
-        public FreeSpotRunnable(String parkID, int index) {
-            this.parkID = parkID;
+        public FreeSpotRunnable(ParkConfig park, int index) {
+            this.park = park;
             this.index = index;
         }
         
@@ -79,16 +81,20 @@ public class Application {
         public void run() {
             boolean success;
             
+            System.out.println("Trying to free spot " + index + " of park " + park.name + "...");
+            
             try {
-                success = ParksDataHandler.freeSpot(parkID, index);
+                success = ParksDataHandler.freeSpot(park.parkID, index);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             
-            // TODO: a few prints
-            
-            if (!success)
+            if (!success) {
+            	System.out.println("Spot " + index + " of park " + park.name + " was already free!");
                 return;
+            }
+            
+            System.out.println("Trying to occupy spot " + index + " of park " + park.name + " freed successfully!");
             
             return;
         }
@@ -105,7 +111,8 @@ public class Application {
         }
         
         public void onLoad(CoapResponse response) {
-            // TODO: modify this content
+            System.out.println("Received " + response.getResponseText() + " from park " + park.name + " spot " + index + "!");
+        	
             JSONObject content = new JSONObject(response.getResponseText());
             
             boolean free = content.getBoolean("free");
@@ -116,7 +123,7 @@ public class Application {
                 return;
             
             if (user == null) {
-                executor.submit(new FreeSpotRunnable(park.parkID, index));
+                executor.submit(new FreeSpotRunnable(park, index));
                 return;
             }
             
@@ -137,6 +144,8 @@ public class Application {
                 throw e;
         }
         
+        System.out.println("MN initialized!");
+        
         for (final ParkConfig p : AppConfig.PARKS) {
             try {
                 p.parkID = ParksDataHandler.createPark(p)
@@ -149,6 +158,8 @@ public class Application {
                 }
             }
         }
+        
+        System.out.println("Parks initialized!");
         
         // Now, for each park and for each spot we need to establish an Observing
         // relation
@@ -164,6 +175,8 @@ public class Application {
                 client.observe(new SpotCoapHandler(p, i));
             }
         }
+        
+        System.out.println("Clients observed!");
         
         while (true)
             ;
