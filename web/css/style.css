@@ -48,6 +48,10 @@ PAYMENT:
     box-shadow: 0 2px 5px 0 rgba(0,0,0,.3);
 }
 
+.round { 
+    border-radius: 50%; 
+}
+
 /* 
 // -----------------------
 // 1 - COVERBOARD
@@ -516,6 +520,10 @@ PAYMENT:
     font-weight: 600;
 }
 
+.resume-card {
+    height: 400px;
+}
+
 /* 
 // ---------------------------
 // 11 - CRASH CALENDAR CARD
@@ -552,7 +560,7 @@ PAYMENT:
     right: 4px;
 }
 
-.crashes-card {
+.payments-card {
     text-align: center;
     min-height: 419px;
 }
@@ -563,13 +571,13 @@ PAYMENT:
 // ---------------------------
 */
 
-.crash-table {
+.payment-table {
     width: 90%;
     margin: 1rem auto;
 }
 
 @media (max-width: 767px) {
-    .crash-table {
+    .payment-table {
         font-size: 14px;
     }
 }

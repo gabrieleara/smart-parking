@@ -18,6 +18,10 @@
     <script type="text/javascript" src="js/assets/popper.min.js"></script>
     <script type="text/javascript" src="js/assets/tether.min.js"></script>
     <script type="text/javascript" src="js/assets/bootstrap.js"></script>
+    <script type="text/javascript" src="js/assets/moment.js"></script>
+    <script type="text/javascript" src="js/assets/letter-avatar.js"></script>
+    <script type="text/javascript" src="js/constants.js"></script>
+    <script type="text/javascript" src="js/dashboard.js"></script>
 
     <!-- Favicon & Preferences -->
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
@@ -38,7 +42,7 @@
     <nav class="lat-nav sticky-top">
         <a class="fa fa-arrow-circle-left" href="index.html"></a>
         <div class="icon-bar">
-            <a class="nav-user-a" href="#" data-toggle="tooltip" data-animation="false" data-placement="right" title="? - Logout">
+            <a class="nav-user-a" href="javascript:submitLogout();" data-toggle="tooltip" data-animation="false" data-placement="right" title="? - Logout">
                 <img src="img/uploads/avatar-default.png" class="nav-avatar">
             </a>
             <a class="active" href="#" data-toggle="tooltip" data-animation="false" data-placement="right" title="Home">
@@ -74,40 +78,20 @@
             <div class="col-sm-8">
                 <div class="card resume-card">
                     <div class="card-title">
-                        <h3>LAST TRIP RESUME</h3>
+                        <h3>TODAY RESUME</h3>
                     </div>
                     <div class="row resume-data">
                         <div class="col-sm-6 text-center" >
-                            <h3 class="green" id="counter-length">-
-                                <small class="unit green">s</small>
+                            <h3 class="green" id="counter-time">-
+                                <small class="unit green">m</small>
                             </h3>
-                            <span class="caption">TRIP LENGTH</span>
+                            <span class="caption">TOTAL PAYMENT TIME</span>
                         </div>
                          <div class="col-sm-6 text-center" >
-                            <h3 class="green" id="counter-starttime">-</h3>
-                            <span class="caption">LAST USAGE</span>
-                        </div>
-                    </div>
-                    <div class="row justify-content-center resume-gauge-container">
-                        <div class="col-sm-2">
-                            <div id="textfield-tot" class="text-center">-</div>
-                            <canvas id="gauge-total"></canvas>
-                            <div class="resume-gauge-caption text-center">TOTAL</div>
-                        </div>
-                        <div class="col-sm-2">
-                            <div id="textfield-acc" class="text-center">-</div>
-                            <canvas id="gauge-acc"></canvas>
-                            <div class="resume-gauge-caption text-center">ACCELERATION</div>
-                        </div>
-                        <div class="col-sm-2">
-                            <div id="textfield-bra" class="text-center">-</div>
-                            <canvas id="gauge-bra"></canvas>
-                            <div class="resume-gauge-caption text-center">BRAKING</div>
-                        </div>
-                        <div class="col-sm-2">
-                            <div id="textfield-ste" class="text-center">-</div>
-                            <canvas id="gauge-ste"></canvas>
-                            <div class="resume-gauge-caption text-center">STEERING</div>
+                            <h3 class="green" id="counter-cost">-
+                                <small class="unit green">€</small>
+                            </h3>
+                            <span class="caption">TOTAL PAYMENT</span>
                         </div>
                     </div>
                 </div>

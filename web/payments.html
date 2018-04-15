@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>XDR Dashboard - Crash</title>
+    <title>spark - Payments</title>
     
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -21,6 +21,8 @@
     <script type="text/javascript" src="js/assets/bootstrap.js"></script>
     <script type="text/javascript" src="js/assets/moment.js"></script>
     <script type="text/javascript" src="js/assets/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript" src="js/assets/letter-avatar.js"></script>
+    <script type="text/javascript" src="js/constants.js"></script>
     <script type="text/javascript" src="js/payments.js"></script>
 
     <!-- Favicon & Preferences -->
@@ -38,7 +40,7 @@
     <nav class="lat-nav sticky-top">
         <a class="fa fa-arrow-circle-left" href="index.html"></a>
         <div class="icon-bar">
-            <a class="nav-user-a" href="#" data-toggle="tooltip" data-animation="false" data-placement="right" title="? - Logout">
+            <a class="nav-user-a" href="javascript:submitLogout();" data-toggle="tooltip" data-animation="false" data-placement="right" title="? - Logout">
                 <img src="img/uploads/avatar-default.png" class="nav-avatar">
             </a>
             <a href="dashboard.html" data-toggle="tooltip" data-animation="false" data-placement="right" title="Home">
@@ -75,17 +77,17 @@
                 </div>
             </div>
             <div class="col-sm-8">
-                <div class="card crashes-card">
+                <div class="card payments-card">
                     <div class="card-title">
                         <h3>YOUR PAYMENTS</h3>
                     </div>
-                    <table class="table crash-table table-hover">
+                    <table class="table payment-table table-hover">
                         <thead>
                             <tr>
                             <th>#</th>
-                            <th>Datetime</th>
-                            <th>Amount</th>
-                            <th>Period</th>
+                            <th>Cost</th>
+                            <th>Start time</th>
+                            <th>End time</th>
                             </tr>
                         </thead>
                         <tbody>

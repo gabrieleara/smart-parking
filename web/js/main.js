@@ -68,7 +68,10 @@ function submitLogin() {
 // Redirect to dashboard if login was successful or display error
 function loginSucc(reply) {
     if (reply.err == null) {
-        checkSucc(reply);
+        navbar.hideElement("login");
+        navbar.hideElement("signup");
+        navbar.showElement("dashboard");
+        $('#login-modal').modal('hide');
     } else {
         $(".login-error-title").html("Error: ");
         $(".login-error-text").html(reply.err);
@@ -100,11 +103,14 @@ function submitSignup() {
 // Action done in case of success
 function signupSucc(reply) {
     if (reply.err == null) {
+        navbar.hideElement("login");
+        navbar.hideElement("signup");
+        navbar.showElement("dashboard");
         $(".signup-success-title").html("Success: ");
         $(".signup-success-text").html("registered with success!");
         showAlert(".alert-signup-succ");
         $("#form-signup :input").prop('disabled', true);
-        $(".btn-secondary").prop('disabled', false);
+        $("#signup-modal .btn-primary").prop('disabled', true);
     } else {
         $(".signup-error-title").html("Error: ");
         $(".signup-error-text").html(reply.err);
