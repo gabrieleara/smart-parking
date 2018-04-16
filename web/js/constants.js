@@ -23,6 +23,14 @@ const PARK_RES = "servlets/parks";
 const LOGIN_RES = "servlets/login";
 const LOGOUT_RES = "servlets/logout";
 const SIGNUP_RES = "servlets/register";
+const PAYMENT_RES = "servlets/payments";
+
+// Client endpoint
+const FRONT_INDEX = "index.html";
+const DASH_INDEX = "dashboard.html";
 
 // Google MAP API endpoint
 const GMAP_RES = "https://www.google.com/maps/dir/?api=1";
+
+// Date-picker main settings
+const MAX_PAYMENTS_PER_PAGE = 4;

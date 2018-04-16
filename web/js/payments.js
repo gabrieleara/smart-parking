@@ -1,21 +1,15 @@
 // -------------------------
-// CRASH.JS
+// PAYMENTS.JS
 // It contains all js code to
-// fill up crash page
+// fill up payments page
 // -----------------------
 
-const MAX_CRASH_PER_PAGE = 4;
-const CAL_FIRST_DAY = 0;
-const CAL_LAST_DAY = 41;
-
-//get_user_data();
+getUserData();
 
 $(document).ready(function(){
-    datepicker_build();
-    datepickerview_event_register();
-    datepickerchange_event_register();
-    datepickerupdate_event_trigger();
-    datepickerchange_event_trigger();
+    datepickerBuild();
+    datepickerchangeEventRegister();
+    datepickerchangeEventTrigger();
 });
 
 // -------------------------------------
@@ -24,38 +18,65 @@ $(document).ready(function(){
 
 // AJAX-REQ
 // Change navbar link if already logged in
-function get_user_data() {
-    ajax_req(
-        php_redir,
+function getUserData() {
+    ajaxReq(
+        LOGIN_RES,
         "",     
-        get_succ, 
-        get_err
+        getSucc, 
+        getErr
     );
 }
 
 // AJAX-REP
 // Action done in case of success
-function get_succ(reply) {
-    if (reply.error == false)
-        prepare_page(reply.message);
+function getSucc(reply) {
+    if (reply.err == null)
+        preparePage(reply);
     else
-        window.location.replace(rel_fron_path);
+        window.location.replace(FRONT_INDEX);
 }
 
 // AJAX-ERR
 // Action done in case of failure
-function get_err() {
+function getErr() {
     alert("Server unreachable.");
-    window.location.replace(rel_fron_path);
+    window.location.replace(FRONT_INDEX);
 }
 
 // Build page with user data
-function prepare_page(userdata) {
-    $('.nav-user-a').attr("href", php_logout);
+function preparePage(userdata) {
     $('.nav-user-a').attr("title", userdata.username + " - Logout");
-    $('.nav-avatar').attr("src", img_svr_path + userdata.avatar);
-    $('a.fa.fa-times-circle-o').attr("href", rel_fron_path);
-    toggle_tooltip();
+    $('.nav-user-a').html('<img avatar="'+userdata.username+'" class="nav-avatar">');
+    toggleTooltip();
+    initLetterAvatar();
+}
+
+// -------------------------------------
+// LOGOUT PROCESS
+// -------------------------------------
+
+// Submit logout request to server
+function submitLogout() {
+    ajaxReq(
+        LOGOUT_RES,
+        "",     
+        logoutSucc, 
+        logoutErr
+    );
+}
+
+// Redirect to index if logout was successful or display error
+function logoutSucc(reply) {
+    if (reply.err == null)
+        window.location.replace(FRONT_INDEX);
+    else
+        alert("Error: " + reply.err);
+
+}
+
+// Show an alert if logout was not possible
+function logoutErr() {
+    alert("Error: server unreachable.");
 }
 
 // -----------------------------
@@ -63,7 +84,7 @@ function prepare_page(userdata) {
 // -----------------------------
 
 // build the datepicker
-function datepicker_build() {
+function datepickerBuild() {
     $('#datetimepicker').datetimepicker({
         format: 'DD/MM/YYYY',
         inline: true
@@ -71,98 +92,60 @@ function datepicker_build() {
 }
 
 // -----------------------------
-// DATE PICKER AJAX FUNCTION
+// PAYMENTS TABLE AJAX FUNCTION
 // -----------------------------
 
 // AJAX-REQ
 // register event function
-function datepickerview_event_register() {
-    $('#datetimepicker').on('dp.update', function(e){
-        if(e.change == 'M' || e.change == null) {
-            var initdata = $('.datepicker-days tbody td').eq(CAL_FIRST_DAY).attr("data-day");
-            var lastdata = $('.datepicker-days tbody td').eq(CAL_LAST_DAY).attr("data-day");
-            var serialized = "init="+initdata+"&last="+lastdata;
-            ajax_req(php_crash, serialized, datepicker_fill, datepicker_fill_error);
-        }
-    });
-}
-
-// trigger datepicker update event
-function datepickerupdate_event_trigger() {
-    $('#datetimepicker').trigger('dp.update');
-}
-
-// AJAX-REP
-// fill with notify icon after user view change
-function datepicker_fill(reply) {
-    if(reply.error != true)
-        for(var i = 0; i < $('.datepicker-days tbody td').length; i++)
-            if(reply.crashdates.includes($('.datepicker-days tbody td').eq(i).attr("data-day")))   
-                $( ".datepicker-days tbody td" ).eq(i).addClass( "notify");
-}
-
-// AJAX-ERR
-// alert with an error in case of server error
-function datepicker_fill_error(reply) {
-    alert("Unable to fill calendar - Server unrechable!");
-}
-
-// --------------------------
-// CRASH TABLE AJAX FUNCTION
-// --------------------------
-
-// AJAX-REQ
-// register event function
-function datepickerchange_event_register() {
+function datepickerchangeEventRegister() {
     $('#datetimepicker').on('dp.change', function(e){
         var date;
 
         if(e != null)
-            date = moment(e.date).format('L');
+            date = moment(e.date).format('YYYYMMDD');
         else
-            date = moment();
+            date = moment().format('YYYYMMDD');
 
-        var serialized = "date="+date;
-        ajax_req(php_crash, serialized, table_fill, table_fill_error);
-        datepickerupdate_event_trigger();
+        var serialized = "date="+date+'T000000';
+        ajaxReq(PAYMENT_RES, serialized, tableFill, tableFillError);
     });
 }
 
 // trigger datepicker change event
-function datepickerchange_event_trigger() {
+function datepickerchangeEventTrigger() {
     $('#datetimepicker').trigger('dp.change');
 }
 
 // AJAX-REP
 // crash table fill
-function table_fill(reply) {
-    if(reply.error == true) {
-        table_fill_empty();
+function tableFill(reply) {
+    if(reply.err != null) {
+        tableFillEmpty();
         return;
     }
     
-    pagination_reset();
-    pagination_create(reply.crashinfos.length);
-    table_reset();
+    paginationReset();
+    paginationCreate(reply.payments.length);
+    tableReset();
 
-    for(var i = 0; i < reply.crashinfos.length; i++) {
-        $('.crash-table tbody').append(`
+    for(var i = 0; i < reply.payments.length; i++) {
+        $('.payment-table tbody').append(`
         <tr style="display: none;">
-            <th>`+reply.crashinfos[i].number+`</th>
-            <td>`+reply.crashinfos[i].crashtime+`</td>
-            <td>`+reply.crashinfos[i].intensity+`</td>
-            <td>`+Boolean(reply.crashinfos[i].stationary)+`</td>
+            <th>`+(i+1)+`</th>
+            <td>`+reply.payments[i].cost+`</td>
+            <td>`+moment(reply.payments[i].startT).format("LLL")+`</td>
+            <td>`+moment(reply.payments[i].endT).format("LLL")+`</td>
         </tr>
         `);
     }
 
-    show_rows(0);
+    showRows(0);
 }
 
 // AJAX-ERR
 // alert with an error in case of server error
-function table_fill_error() {
-    table_fill_empty();
+function tableFillError() {
+    tableFillEmpty();
     alert("Unable to fill table - Server unrechable!");
 }
 
@@ -171,14 +154,14 @@ function table_fill_error() {
 // --------------------------
 
 // reset table content
-function table_reset() {
-    $('.crash-table tbody').html("");
+function tableReset() {
+    $('.payment-table tbody').html("");
 }
 
 // fill the table with empty row
-function table_fill_empty() {
-    pagination_reset();
-    $('.crash-table tbody').html(`
+function tableFillEmpty() {
+    paginationReset();
+    $('.payment-table tbody').html(`
         <tr>
             <th>-</th>
             <td>-</td>
@@ -188,12 +171,12 @@ function table_fill_empty() {
 }
 
 // show only limited number of rows
-function show_rows(init_number) {
-    for(var i = 0; i < $('.crash-table tbody tr').length; i++) {
-        if(i >= init_number && i < MAX_CRASH_PER_PAGE+init_number)
-            $('.crash-table tbody tr').eq(i).css("display", "table-row");
+function showRows(init_number) {
+    for(var i = 0; i < $('.payment-table tbody tr').length; i++) {
+        if(i >= init_number && i < MAX_PAYMENTS_PER_PAGE+init_number)
+            $('.payment-table tbody tr').eq(i).css("display", "table-row");
         else
-            $('.crash-table tbody tr').eq(i).css("display", "none");
+            $('.payment-table tbody tr').eq(i).css("display", "none");
     }
 }
 
@@ -202,16 +185,16 @@ function show_rows(init_number) {
 // ----------------------------
 
 // reset pagination to default one
-function pagination_reset() {
+function paginationReset() {
     $('.pagination').html(`<li class="page-item active">
                                 <a class="page-link" href="javascript:pagechange(1)">1</a>
                         </li>`);
 }
 
 // create button for pagination
-function pagination_create(number) {
-    if(number > MAX_CRASH_PER_PAGE) {
-        for(var i = 0; i < (number % MAX_CRASH_PER_PAGE); i++) {
+function paginationCreate(number) {
+    if(number > MAX_PAYMENTS_PER_PAGE) {
+        for(var i = 0; i < (number % MAX_PAYMENTS_PER_PAGE); i++) {
             $('.pagination').append(`
                 <li class="page-item">
                     <a class="page-link" href="javascript:pagechange(`+(i+2)+`)">`+(i+2)+`</a>
@@ -225,7 +208,7 @@ function pagination_create(number) {
 function pagechange(pagenum) {
     $('.pagination li').removeClass("active");
     $('.pagination li').eq(pagenum-1).addClass("active");
-    show_rows((pagenum-1) * MAX_CRASH_PER_PAGE);
+    showRows((pagenum-1) * MAX_PAYMENTS_PER_PAGE);
 }
 
 // -------------------------------------
@@ -233,11 +216,10 @@ function pagechange(pagenum) {
 // -------------------------------------
 
 // make an ajax req
-function ajax_req(dest, info, succ, err) {
+function ajaxReq(dest, info, succ, err) {
     $.ajax({
-        type: "POST",
+        type: "GET",
         url: dest,
-        xhrFields: { withCredentials: true },
         data: info,
         dataType: "json",
         success: succ,
@@ -246,6 +228,6 @@ function ajax_req(dest, info, succ, err) {
 }
 
 // toggle on boostrap tooltip
-function toggle_tooltip() {
+function toggleTooltip() {
     $('[data-toggle="tooltip"]').tooltip(); 
 }
