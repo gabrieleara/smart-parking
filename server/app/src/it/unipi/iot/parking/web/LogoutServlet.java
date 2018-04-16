@@ -44,8 +44,11 @@ public class LogoutServlet extends HttpServlet {
             response.getWriter()
                     .println("{ \"err\":\"Logout failed! "
                             + "You need to be logged in to log out. Please log in to log out.\" }");
+        else
+            response.getWriter().println("{}");
         
         session.invalidate();
+        
     }
     
     /**
