@@ -132,7 +132,7 @@ function tableFill(reply) {
         $('.payment-table tbody').append(`
         <tr style="display: none;">
             <th>`+(i+1)+`</th>
-            <td>`+reply.payments[i].cost+`</td>
+            <td>`+reply.payments[i].cost.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'})+`</td>
             <td>`+moment(reply.payments[i].startT).format("LLL")+`</td>
             <td>`+moment(reply.payments[i].endT).format("LLL")+`</td>
         </tr>

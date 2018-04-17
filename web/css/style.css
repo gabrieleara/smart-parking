@@ -480,10 +480,12 @@ PAYMENT:
 
 .green {
     color: #1BC98E;
+    font-size: 4rem;
 }
 
 .red {
     color: #E64759;
+    font-size: 4rem;
 }
 
 /* 
@@ -522,6 +524,16 @@ PAYMENT:
 
 .resume-card {
     height: 400px;
+}
+
+.row.resume-data {
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+
+.caption {
+    font-weight: 500;
 }
 
 /* 

@@ -40,6 +40,7 @@ public class ObservingClientsHolder {
         @Override
         public void onError(AsyncEvent event) throws IOException {
             removeClient(event.getAsyncContext());
+            event.getAsyncContext().complete();
         }
         
         @Override
@@ -50,6 +51,7 @@ public class ObservingClientsHolder {
         @Override
         public void onTimeout(AsyncEvent event) throws IOException {
             removeClient(event.getAsyncContext());
+            event.getAsyncContext().complete();
         }
     }
     

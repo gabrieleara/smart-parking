@@ -30,7 +30,7 @@ public class SSEHandler {
     
     private static final long TIME_SECOND      = 1000L;
     private static final long RETRY_INTERVAL   = 3 * TIME_SECOND;
-    private static final long TIMEOUT_INTERVAL = 30 * RETRY_INTERVAL;
+    private static final long TIMEOUT_INTERVAL = 10 * RETRY_INTERVAL;
     
     private static final String EVENT_NEW_PARK_LIST = "newParkList";
     private static final String EVENT_PARK_UPDATE   = "parkUpdate";
