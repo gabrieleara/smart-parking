@@ -1012,6 +1012,17 @@ public class ParksDataHandler {
         // Done
     }
     
+    public static String getParkID(String name) throws OM2MException, TimeoutException {
+        final String[] filters = new LabelsFactory().setType("park")
+                                                    .setResourceName(name)
+                                                    .getFilters();
+        final String[] uril = OM2M_NODE.discovery(AppConfig.CSE_ID, filters);
+        
+        if (uril.length != 1)
+            throw new OM2MException("Bad discovery request generated!", ErrorCode.OTHER);
+        
+        return getResourceIDFromPath(uril[0]);
+        
+    }
+    
 }
-
-// TODO: a way to get park id from name

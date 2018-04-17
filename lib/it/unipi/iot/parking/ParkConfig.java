@@ -8,7 +8,8 @@ public class ParkConfig {
     public final String name;
     public final String appID;
     public final String netIP;
-    public final int spotsNumber;
+    public String       parkID;
+    public final int    spotsNumber;
     
     // This means also spot number zero, which actually is the manifest of the park
     public final String[] spots;
@@ -23,7 +24,8 @@ public class ParkConfig {
         spots = new String[spotsData.length()];
         
         for (int i = 0; i < spotsData.length(); ++i) {
-            spots[i] = spotsData.getJSONObject(i).toString();
+            spots[i] = spotsData.getJSONObject(i)
+                                .toString();
         }
         
         if (appID == null)
@@ -42,7 +44,7 @@ public class ParkConfig {
             }
         }
         
-        spotsNumber = spots.length-1;
+        spotsNumber = spots.length - 1;
         
     }
     

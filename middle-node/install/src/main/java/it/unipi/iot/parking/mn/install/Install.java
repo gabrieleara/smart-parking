@@ -6,6 +6,7 @@ import java.util.concurrent.TimeoutException;
 import it.unipi.iot.parking.AppConfig;
 import it.unipi.iot.parking.ParkConfig;
 import it.unipi.iot.parking.ParksDataHandler;
+import it.unipi.iot.parking.om2m.ErrorCode;
 import it.unipi.iot.parking.om2m.OM2MException;
 
 public class Install {
@@ -13,12 +14,22 @@ public class Install {
         try {
             ParksDataHandler.initMN();
         } catch (OM2MException e) {
+            if (e.getCode() != ErrorCode.NAME_ALREADY_PRESENT)
+                throw e;
         }
+        
+        System.out.println("MN initialized!");
         
         for (final ParkConfig p : AppConfig.PARKS) {
             try {
-                ParksDataHandler.createPark(p);
+                p.parkID = ParksDataHandler.createPark(p)
+                                           .getResourceID();
             } catch (OM2MException e) {
+                if (e.getCode() != ErrorCode.NAME_ALREADY_PRESENT)
+                    throw e;
+                else {
+                    p.parkID = ParksDataHandler.getParkID(p.name);
+                }
             }
         }
         
