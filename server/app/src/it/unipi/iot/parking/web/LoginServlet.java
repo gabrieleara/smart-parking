@@ -91,6 +91,12 @@ public class LoginServlet extends HttpServlet {
         // Return user data
         UserData data = (UserData) session.getAttribute("userdata");
         
+        if (data == null) {
+        		response.getWriter()
+        				.println("{\"err\":\"Unexpected missing user information.\"}");
+        		return;
+        }
+        
         response.getWriter()
                 .println(data.toString());
     }

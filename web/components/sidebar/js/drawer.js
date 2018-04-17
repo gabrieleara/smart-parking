@@ -65,7 +65,7 @@ class SidebarDrawer {
 
     // Set location item component price
     static setItemPrice (item, price) {
-        this.setText(item, '.location-list-price-text', price);
+        this.setText(item, '.location-list-price-text', price.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'}));
     }
 
     // Set location item component spot number
@@ -126,7 +126,7 @@ class SidebarDrawer {
 
     // Set location details component price
     static setDetailsPrice(item, price) {
-        this.setText(item, '.location-details-price-text', price);
+        this.setText(item, '.location-details-price-text', price.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'}));
     }
 
     // Set location details component spot number

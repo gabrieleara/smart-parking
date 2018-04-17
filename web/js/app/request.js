@@ -33,19 +33,16 @@ class Request {
 		this.source = new EventSource(requiredRes);
 		this.source.addEventListener("newParkList", function(event) {
 				this.reply = JSON.parse(event.data);
-				console.log(this.reply);
 				callback();
 			}.bind(this), false);
 		this.source.addEventListener("parkUpdate", function(event) {
 				var update = JSON.parse(event.data)
 				RepParser.parseParkUpdating(this.reply, update);
-				console.log(update);
 				callback();
 			}.bind(this), false);
 		this.source.addEventListener("spotUpdate", function(event) {
 				var update = JSON.parse(event.data)
 				RepParser.parseSpotUpdating(this.reply, update);
-				console.log(update);
 				callback();
 			}.bind(this), false);
 			

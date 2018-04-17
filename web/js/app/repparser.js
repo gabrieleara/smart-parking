@@ -81,7 +81,7 @@ class RepParser {
     // Parse park update packet and update reply object
     static parseParkUpdating(reply, update) {
         for(var i = 0; i < reply.parks.length; i++) {
-            if(reply.parks[i].id == update.parkID) {
+            if(reply.parks[i].id == update.id) {
                 this.updateParkStatus(reply.parks[i], update.price);
                 return;
             }
