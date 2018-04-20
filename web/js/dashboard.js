@@ -127,7 +127,7 @@ function getTodayDataErr() {
 
 // Prepare counter with last trip data
 function counterSet(totalMinutes, totalCost) {
-    $('#counter-time').html(totalMinutes+'<small class="unit green"> m</small>');
+    $('#counter-time').html(totalMinutes+'<small class="unit green-text"> m</small>');
     $('#counter-cost').html(totalCost.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'}));
 }
 

@@ -480,10 +480,18 @@ PAYMENT:
 
 .green {
     color: #1BC98E;
+}
+
+.green-text {
+    color: #1BC98E;
     font-size: 4rem;
 }
 
 .red {
+    color: #E64759;
+}
+
+.red-text {
     color: #E64759;
     font-size: 4rem;
 }
